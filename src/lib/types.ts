@@ -16,6 +16,20 @@ export type ProductImage = {
   sort_order: number;
 };
 
+/** Un dato que completa el cliente al pedir un producto personalizable. */
+export type CampoPersonalizable = {
+  clave: string;
+  etiqueta: string;
+  tipo: "texto" | "texto_largo" | "fecha" | "opciones";
+  opciones: string[];
+  obligatorio: boolean;
+  max: number | null;
+  ayuda: string;
+};
+
+export type Modalidad = "stock" | "a_pedido";
+export type TipoSena = "none" | "percent" | "amount";
+
 export type Product = {
   id: string;
   slug: string;
@@ -31,6 +45,11 @@ export type Product = {
   is_featured: boolean;
   sort_order: number;
   created_at: string;
+  fulfillment: Modalidad;
+  lead_time: string | null;
+  custom_fields: CampoPersonalizable[];
+  deposit_type: TipoSena;
+  deposit_value: number;
   images: ProductImage[];
   category?: Pick<Category, "id" | "name" | "slug"> | null;
 };
@@ -152,22 +171,33 @@ export type Profile = {
   is_admin: boolean;
 };
 
-export type PaymentMethod = "mercadopago" | "transfer";
+export type PaymentMethod = "mercadopago" | "transfer" | "cash";
+
+export const METODOS_PAGO: Record<PaymentMethod, string> = {
+  mercadopago: "Mercado Pago",
+  transfer: "Transferencia bancaria",
+  cash: "Efectivo al retirar",
+};
+
 export type DeliveryType = "delivery" | "pickup";
 
 export type OrderStatus =
   | "pendiente_pago"
   | "comprobante_enviado"
+  | "sena_pagada"
   | "pagado"
   | "en_preparacion"
+  | "listo"
   | "entregado"
   | "cancelado";
 
 export const ESTADOS_PEDIDO: Record<OrderStatus, { label: string; clase: string }> = {
   pendiente_pago: { label: "Esperando pago", clase: "bg-arena/40 text-nogal" },
   comprobante_enviado: { label: "Comprobante enviado", clase: "bg-acento/40 text-nogal" },
+  sena_pagada: { label: "Seña pagada", clase: "bg-salvia/15 text-salvia" },
   pagado: { label: "Pagado", clase: "bg-salvia/20 text-salvia" },
   en_preparacion: { label: "En preparación", clase: "bg-acento-fuerte/20 text-acento-profundo" },
+  listo: { label: "Listo para entregar", clase: "bg-acento-fuerte text-white" },
   entregado: { label: "Entregado", clase: "bg-salvia text-white" },
   cancelado: { label: "Cancelado", clase: "bg-carbon/10 text-carbon/60" },
 };
@@ -182,6 +212,8 @@ export type OrderItem = {
   unit_price: number;
   quantity: number;
   subtotal: number;
+  personalization: { etiqueta: string; valor: string }[] | null;
+  deposit_unit: number;
 };
 
 export type Order = {
@@ -205,11 +237,25 @@ export type Order = {
   discount_total: number;
   shipping_total: number;
   total: number;
+  /** Seña total de los productos que la llevan. */
+  deposit_total: number;
+  /** Lo que queda por pagar al retirar o al recibir. */
+  balance_due: number;
+  shipping_zone: string | null;
   notes: string | null;
   receipt_path: string | null;
   mp_payment_id: string | null;
   created_at: string;
   items?: OrderItem[];
+};
+
+export type ZonaEnvio = {
+  id: string;
+  name: string;
+  /** null = a coordinar. */
+  cost: number | null;
+  sort_order: number;
+  is_active: boolean;
 };
 
 /** Resultado que devuelven los formularios del panel. */

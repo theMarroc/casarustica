@@ -3,12 +3,18 @@ import { Clock, MapPin, Truck } from "lucide-react";
 import { EncabezadoSeccion } from "@/components/home/encabezado-seccion";
 import { estilosBoton } from "@/components/ui/boton";
 import { aNumero, ajuste, ajusteCrudo, esVerdadero, linkWhatsapp } from "@/lib/settings";
-import type { Settings } from "@/lib/types";
+import type { Settings, ZonaEnvio } from "@/lib/types";
 import { formatARS } from "@/lib/utils";
 
-export function MapaDelivery({ ajustes }: { ajustes: Settings }) {
+export function MapaDelivery({
+  ajustes,
+  zonas,
+}: {
+  ajustes: Settings;
+  zonas: ZonaEnvio[];
+}) {
   const mapa = ajusteCrudo(ajustes, "mapa_embed_url");
-  const costoEnvio = aNumero(ajustes.envio_costo);
+  const condiciones = ajusteCrudo(ajustes, "envio_condiciones");
   const envioGratis = aNumero(ajustes.envio_gratis_desde);
   const retiro = esVerdadero(ajustes.retiro_activo ?? "true");
   const direccionRetiro = ajusteCrudo(ajustes, "retiro_direccion");
@@ -27,12 +33,19 @@ export function MapaDelivery({ ajustes }: { ajustes: Settings }) {
             <li className="flex items-start gap-3">
               <Truck className="mt-0.5 h-5 w-5 shrink-0 text-acento-fuerte" strokeWidth={1.4} />
               <span>
-                Envío a domicilio:{" "}
-                <strong className="font-semibold text-nogal">
-                  {costoEnvio > 0 ? formatARS(costoEnvio) : "a coordinar"}
-                </strong>
-                {envioGratis > 0 ? (
-                  <>, sin cargo desde {formatARS(envioGratis)}</>
+                Envío a domicilio
+                {envioGratis > 0 ? <>, sin cargo desde {formatARS(envioGratis)}</> : null}.
+                {zonas.length > 0 ? (
+                  <span className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                    {zonas.map((zona) => (
+                      <span key={zona.id}>
+                        {zona.name}:{" "}
+                        <strong className="font-semibold text-nogal">
+                          {zona.cost === null ? "a coordinar" : formatARS(zona.cost)}
+                        </strong>
+                      </span>
+                    ))}
+                  </span>
                 ) : null}
               </span>
             </li>
@@ -49,7 +62,9 @@ export function MapaDelivery({ ajustes }: { ajustes: Settings }) {
 
             <li className="flex items-start gap-3">
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-acento-fuerte" strokeWidth={1.4} />
-              <span>Coordinamos el día y el horario por WhatsApp.</span>
+              <span className="whitespace-pre-line">
+                {condiciones || "Coordinamos el día y el horario por WhatsApp."}
+              </span>
             </li>
           </ul>
 

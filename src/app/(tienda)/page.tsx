@@ -24,6 +24,7 @@ import {
   getOfertas,
   getProductos,
   getSecciones,
+  getZonasEnvio,
   modoDemo,
 } from "@/lib/db";
 import { calcularPrecio } from "@/lib/pricing";
@@ -42,6 +43,7 @@ export default async function Inicio() {
     preguntas,
     trabajos,
     eventos,
+    zonas,
   ] = await Promise.all([
     getAjustes(),
     getSecciones(),
@@ -54,6 +56,7 @@ export default async function Inicio() {
     getFaqs(),
     getAntesDespues(),
     getEventos(),
+    getZonasEnvio(),
   ]);
 
   const enOferta = todos.filter((p) => calcularPrecio(p, ofertas).oferta !== null);
@@ -163,7 +166,7 @@ export default async function Inicio() {
         </section>
       ) : null,
     frase: <FranjaFrase ajustes={ajustes} />,
-    mapa_delivery: <MapaDelivery ajustes={ajustes} />,
+    mapa_delivery: <MapaDelivery ajustes={ajustes} zonas={zonas} />,
     faq: <SeccionPreguntas preguntas={preguntas} ajustes={ajustes} />,
     newsletter: <Newsletter ajustes={ajustes} />,
   };

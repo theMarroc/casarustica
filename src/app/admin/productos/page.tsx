@@ -133,6 +133,20 @@ export default async function ProductosAdmin({
                           {etiquetaOferta(precio.oferta, precio)}
                         </Insignia>
                       ) : null}
+                      {producto.fulfillment === "a_pedido" ? (
+                        <Insignia className="bg-acento/40 text-nogal">A pedido</Insignia>
+                      ) : null}
+                      {producto.custom_fields.length > 0 ? (
+                        <Insignia className="bg-arena/40 text-nogal">Personalizable</Insignia>
+                      ) : null}
+                      {producto.deposit_type !== "none" ? (
+                        <Insignia className="bg-salvia/15 text-salvia">
+                          Seña{" "}
+                          {producto.deposit_type === "percent"
+                            ? `${producto.deposit_value}%`
+                            : formatARS(producto.deposit_value)}
+                        </Insignia>
+                      ) : null}
                     </p>
                   </div>
 

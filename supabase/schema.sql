@@ -111,6 +111,27 @@ create table if not exists public.products (
 create index if not exists products_category_idx on public.products (category_id);
 create index if not exists products_active_idx on public.products (is_active);
 
+-- Modalidad, personalización y seña. Van con alter para que el script sirva
+-- también en bases ya creadas.
+alter table public.products
+  add column if not exists fulfillment text not null default 'stock',
+  add column if not exists lead_time text,
+  add column if not exists custom_fields jsonb not null default '[]'::jsonb,
+  add column if not exists deposit_type text not null default 'none',
+  add column if not exists deposit_value numeric(12, 2) not null default 0;
+
+alter table public.products drop constraint if exists products_fulfillment_check;
+alter table public.products add constraint products_fulfillment_check
+  check (fulfillment in ('stock', 'a_pedido'));
+
+alter table public.products drop constraint if exists products_deposit_check;
+alter table public.products add constraint products_deposit_check
+  check (
+    deposit_type in ('none', 'percent', 'amount')
+    and deposit_value >= 0
+    and (deposit_type <> 'percent' or deposit_value <= 100)
+  );
+
 create table if not exists public.product_images (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references public.products on delete cascade,
@@ -307,13 +328,15 @@ create table if not exists public.orders (
   address_city text,
   address_zone text,
   address_notes text,
-  payment_method text not null default 'transfer' check (payment_method in ('mercadopago', 'transfer')),
+  payment_method text not null default 'transfer' check (payment_method in ('mercadopago', 'transfer', 'cash')),
   status text not null default 'pendiente_pago' check (
     status in (
       'pendiente_pago',
       'comprobante_enviado',
+      'sena_pagada',
       'pagado',
       'en_preparacion',
+      'listo',
       'entregado',
       'cancelado'
     )
@@ -347,6 +370,49 @@ create table if not exists public.order_items (
 
 create index if not exists order_items_order_idx on public.order_items (order_id);
 
+-- Seña, saldo, zona de envío, efectivo y los estados nuevos.
+alter table public.orders
+  add column if not exists deposit_total numeric(12, 2) not null default 0,
+  add column if not exists balance_due numeric(12, 2) not null default 0,
+  add column if not exists shipping_zone text;
+
+alter table public.orders drop constraint if exists orders_payment_method_check;
+alter table public.orders add constraint orders_payment_method_check
+  check (payment_method in ('mercadopago', 'transfer', 'cash'));
+
+alter table public.orders drop constraint if exists orders_status_check;
+alter table public.orders add constraint orders_status_check
+  check (
+    status in (
+      'pendiente_pago',
+      'comprobante_enviado',
+      'sena_pagada',
+      'pagado',
+      'en_preparacion',
+      'listo',
+      'entregado',
+      'cancelado'
+    )
+  );
+
+alter table public.order_items
+  add column if not exists personalization jsonb,
+  add column if not exists deposit_unit numeric(12, 2) not null default 0;
+
+-- ---------------------------------------------------------------------------
+-- Zonas de envío (el costo null significa "a coordinar")
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.shipping_zones (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  cost numeric(12, 2) check (cost is null or cost >= 0),
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------------
 -- Triggers de updated_at
 -- ---------------------------------------------------------------------------
@@ -356,7 +422,7 @@ declare
   t text;
 begin
   for t in
-    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events'])
+    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones'])
   loop
     execute format('drop trigger if exists set_updated_at_%1$s on public.%1$s', t);
     execute format(
@@ -409,6 +475,7 @@ alter table public.faqs enable row level security;
 alter table public.before_after enable row level security;
 alter table public.events enable row level security;
 alter table public.event_images enable row level security;
+alter table public.shipping_zones enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
@@ -531,6 +598,14 @@ create policy "fotos de eventos visibles" on public.event_images
 
 drop policy if exists "fotos de eventos administrables" on public.event_images;
 create policy "fotos de eventos administrables" on public.event_images
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "zonas de envio visibles" on public.shipping_zones;
+create policy "zonas de envio visibles" on public.shipping_zones
+  for select using (is_active or public.is_admin());
+
+drop policy if exists "zonas de envio administrables" on public.shipping_zones;
+create policy "zonas de envio administrables" on public.shipping_zones
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- --- Newsletter ------------------------------------------------------------
@@ -662,6 +737,13 @@ insert into public.categories (slug, name, description, sort_order) values
 on conflict (slug) do nothing;
 
 -- Los productos no se precargan: los carga Silvina desde el panel.
+
+-- Zonas sin costo cargado: se ven como "a coordinar" hasta que ella ponga el precio.
+insert into public.shipping_zones (name, cost, sort_order) values
+  ('Miramar',        null, 1),
+  ('Mar del Plata',  null, 2),
+  ('Otra localidad', null, 3)
+on conflict (name) do nothing;
 
 -- ===========================================================================
 -- ULTIMO PASO (importante)

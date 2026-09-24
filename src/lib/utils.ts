@@ -46,6 +46,7 @@ export function tokenAleatorio(largo = 24) {
   return salida;
 }
 
+/** Fecha y hora en la hora de Argentina (el servidor de Vercel corre en UTC). */
 export function formatFecha(iso: string) {
   return new Date(iso).toLocaleDateString("es-AR", {
     day: "2-digit",
@@ -53,6 +54,7 @@ export function formatFecha(iso: string) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "America/Argentina/Buenos_Aires",
   });
 }
 

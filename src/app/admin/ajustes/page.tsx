@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 import { guardarAjustes } from "@/actions/admin/contenido";
+import { alternarZona, borrarZona, guardarZona } from "@/actions/admin/envios";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
+import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
+import { Interruptor } from "@/components/admin/interruptor";
 import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { SelectorApariencia } from "@/components/admin/selector-apariencia";
 import { SubidorImagen } from "@/components/admin/subidor";
 import { AreaTexto, Campo, CampoConEtiqueta } from "@/components/ui/campos";
 import { Logo } from "@/components/ui/marca";
 import { estiloValido, letraValida } from "@/lib/apariencia";
-import { getAjustes } from "@/lib/db";
+import { getAjustes, getZonasEnvio } from "@/lib/db";
 import { ajuste, ajusteCrudo, ajusteQuitable, esVerdadero } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -18,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AjustesAdmin() {
-  const ajustes = await getAjustes();
+  const [ajustes, zonas] = await Promise.all([getAjustes(), getZonasEnvio(true)]);
   const mpConfigurado = Boolean(process.env.MP_ACCESS_TOKEN);
 
   return (
@@ -165,7 +168,7 @@ export default async function AjustesAdmin() {
             <input
               type="hidden"
               name="__interruptores"
-              value="pago_transferencia_activo,pago_mercadopago_activo"
+              value="pago_transferencia_activo,pago_mercadopago_activo,pago_efectivo_activo"
             />
 
             <div className="flex flex-col gap-5">
@@ -250,6 +253,25 @@ export default async function AjustesAdmin() {
                   </p>
                 ) : null}
               </div>
+
+              <div className="rounded-marca border border-piedra/30 bg-lino/40 p-4">
+                <label className="flex items-start gap-2.5 text-sm text-carbon/80">
+                  <input
+                    type="checkbox"
+                    name="ajuste_pago_efectivo_activo"
+                    defaultChecked={esVerdadero(ajustes.pago_efectivo_activo ?? "true")}
+                    className="mt-0.5 h-4 w-4 accent-acento-fuerte"
+                  />
+                  <span>
+                    <span className="font-semibold text-nogal">
+                      Cobrar en efectivo al retirar
+                    </span>
+                    <br />
+                    Solo aparece si el cliente elige retirar en el showroom. Si el pedido
+                    lleva seña, la seña se paga igual por Mercado Pago o transferencia.
+                  </span>
+                </label>
+              </div>
             </div>
           </FormularioAdmin>
         </PanelAdmin>
@@ -261,16 +283,15 @@ export default async function AjustesAdmin() {
 
             <div className="grid gap-4 sm:grid-cols-3">
               <CampoConEtiqueta
-                etiqueta="Costo del envío"
-                ayuda="0 = a coordinar por WhatsApp"
+                etiqueta="Condiciones de envío"
+                className="sm:col-span-3"
+                ayuda="Se ven al elegir el envío: días de entrega, cómo se coordina, qué no se envía..."
               >
-                <Campo
-                  name="ajuste_envio_costo"
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  defaultValue={ajustes.envio_costo ?? "0"}
+                <AreaTexto
+                  name="ajuste_envio_condiciones"
+                  rows={3}
+                  defaultValue={ajusteCrudo(ajustes, "envio_condiciones")}
+                  placeholder="Enviamos los martes y viernes. Te escribimos por WhatsApp para coordinar el horario."
                 />
               </CampoConEtiqueta>
 
@@ -367,6 +388,99 @@ export default async function AjustesAdmin() {
               </span>
             </label>
           </FormularioAdmin>
+        </PanelAdmin>
+
+        {/* ------------------------------------------------------------- */}
+        <PanelAdmin
+          titulo="Zonas de envío"
+          texto="El cliente elige su zona al finalizar el pedido. Si dejás el costo vacío, figura como “a coordinar”."
+        >
+          <div className="flex flex-col gap-3">
+            {zonas.map((zona) => (
+              <div
+                key={zona.id}
+                className="flex flex-wrap items-end gap-3 rounded-marca border border-piedra/25 bg-lino/40 p-3"
+              >
+                <FormularioAdmin
+                  accion={guardarZona}
+                  textoBoton="Guardar"
+                  tamano="sm"
+                  variante="secundario"
+                  className="flex flex-1 flex-wrap items-end gap-3"
+                >
+                  <input type="hidden" name="id" value={zona.id} />
+                  <CampoConEtiqueta etiqueta="Zona" className="min-w-40 flex-1">
+                    <Campo name="name" defaultValue={zona.name} />
+                  </CampoConEtiqueta>
+                  <CampoConEtiqueta etiqueta="Costo" className="w-32">
+                    <Campo
+                      name="cost"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      defaultValue={zona.cost === null ? "" : String(zona.cost)}
+                      placeholder="A coordinar"
+                    />
+                  </CampoConEtiqueta>
+                  <CampoConEtiqueta etiqueta="Orden" className="w-20">
+                    <Campo name="sort_order" type="number" defaultValue={String(zona.sort_order)} />
+                  </CampoConEtiqueta>
+                </FormularioAdmin>
+
+                <label className="mb-1 flex flex-col items-center gap-1">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-piedra-oscura">
+                    Visible
+                  </span>
+                  <Interruptor
+                    accion={alternarZona}
+                    campos={{ id: zona.id }}
+                    activo={zona.is_active}
+                    etiqueta={`Ofrecer envíos a ${zona.name}`}
+                  />
+                </label>
+
+                <FormularioConfirmado
+                  accion={borrarZona}
+                  mensaje={`¿Borrar la zona "${zona.name}"?`}
+                  className="mb-1"
+                >
+                  <input type="hidden" name="id" value={zona.id} />
+                  <button
+                    type="submit"
+                    title="Borrar"
+                    className="rounded-marca p-2 text-piedra-oscura transition-colors hover:bg-alerta/10 hover:text-alerta"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </FormularioConfirmado>
+              </div>
+            ))}
+
+            <FormularioAdmin
+              accion={guardarZona}
+              textoBoton="Agregar zona"
+              tamano="sm"
+              className="flex flex-wrap items-end gap-3 rounded-marca border border-dashed border-piedra/50 p-3"
+            >
+              <CampoConEtiqueta etiqueta="Zona" className="min-w-40 flex-1">
+                <Campo name="name" placeholder="Mar de Cobo" />
+              </CampoConEtiqueta>
+              <CampoConEtiqueta etiqueta="Costo" className="w-32">
+                <Campo
+                  name="cost"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  placeholder="A coordinar"
+                />
+              </CampoConEtiqueta>
+              <CampoConEtiqueta etiqueta="Orden" className="w-20">
+                <Campo name="sort_order" type="number" defaultValue={String(zonas.length + 1)} />
+              </CampoConEtiqueta>
+            </FormularioAdmin>
+          </div>
         </PanelAdmin>
       </div>
     </>

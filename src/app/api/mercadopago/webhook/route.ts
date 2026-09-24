@@ -37,18 +37,29 @@ export async function POST(request: Request) {
     const referencia = pago.external_reference;
     if (!referencia) return NextResponse.json({ ok: true, ignorado: true });
 
-    const estado =
-      pago.status === "approved"
-        ? "pagado"
-        : pago.status === "rejected" || pago.status === "cancelled"
-          ? "cancelado"
-          : "pendiente_pago";
-
     const supabase = createAdminClient();
+    const { data: pedido } = await supabase
+      .from("orders")
+      .select("id, status, balance_due")
+      .eq("id", referencia)
+      .maybeSingle();
+    if (!pedido) return NextResponse.json({ ok: true, ignorado: true });
+
+    // Solo avanza pedidos que esperaban el pago: si ya se preparó o se
+    // entregó, un aviso atrasado no lo hace retroceder. Un pago rechazado
+    // tampoco cancela: el cliente puede reintentar.
+    const esperabaPago = ["pendiente_pago", "comprobante_enviado"].includes(pedido.status);
+    const estado =
+      pago.status === "approved" && esperabaPago
+        ? Number(pedido.balance_due) > 0
+          ? "sena_pagada"
+          : "pagado"
+        : pedido.status;
+
     await supabase
       .from("orders")
       .update({ status: estado, mp_payment_id: String(pago.id ?? idPago) })
-      .eq("id", referencia);
+      .eq("id", pedido.id);
 
     return NextResponse.json({ ok: true, estado });
   } catch (error) {

@@ -7,26 +7,39 @@ import { cambiarEstadoPedido } from "@/actions/admin/pedidos";
 import { ESTADOS_PEDIDO, type OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-/** El recorrido normal de un pedido, en orden. Cancelado va aparte. */
+/** El recorrido completo de un pedido, en orden. Cancelado va aparte. */
 const RECORRIDO: OrderStatus[] = [
   "pendiente_pago",
   "comprobante_enviado",
+  "sena_pagada",
   "pagado",
   "en_preparacion",
+  "listo",
   "entregado",
 ];
 
 /**
  * Selector de estado: cada estado es un botón. El cambio se ve al instante
  * (optimista) y, si el servidor lo rechaza, vuelve al estado anterior.
+ * Los pasos que no aplican al pedido (seña, comprobante) no se muestran.
  */
 export function EstadoPedido({
   pedidoId,
   estadoInicial,
+  conSena,
+  conComprobante,
 }: {
   pedidoId: string;
   estadoInicial: OrderStatus;
+  conSena: boolean;
+  conComprobante: boolean;
 }) {
+  const pasos = RECORRIDO.filter(
+    (paso) =>
+      paso === estadoInicial ||
+      (paso !== "sena_pagada" || conSena) && (paso !== "comprobante_enviado" || conComprobante),
+  );
+
   const [estado, setEstado] = useState(estadoInicial);
   const [delServidor, setDelServidor] = useState(estadoInicial);
   const [mostrado, setMostrado] = useOptimistic(estado);
@@ -68,7 +81,7 @@ export function EstadoPedido({
     });
   }
 
-  const posicion = RECORRIDO.indexOf(mostrado);
+  const posicion = pasos.indexOf(mostrado);
   const cancelado = mostrado === "cancelado";
 
   return (
@@ -76,7 +89,7 @@ export function EstadoPedido({
       <p className="text-xs text-piedra-oscura">Tocá un estado para cambiarlo.</p>
 
       <ol className="flex flex-col gap-1.5">
-        {RECORRIDO.map((clave, indice) => {
+        {pasos.map((clave, indice) => {
           const actual = clave === mostrado;
           const hecho = !cancelado && indice < posicion;
 
@@ -113,7 +126,7 @@ export function EstadoPedido({
                     indice + 1
                   )}
                 </span>
-                {ESTADOS_PEDIDO[clave].label}
+                {clave === "pagado" && conSena ? "Pagado completo" : ESTADOS_PEDIDO[clave].label}
               </button>
             </li>
           );

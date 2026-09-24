@@ -1,4 +1,4 @@
-import type { Offer, Product } from "./types";
+import type { Offer, Product, TipoSena } from "./types";
 
 export type PrecioCalculado = {
   /** Precio final a cobrar. */
@@ -69,4 +69,20 @@ export function etiquetaOferta(oferta: Offer, precio: PrecioCalculado) {
   if (oferta.label) return oferta.label;
   if (oferta.kind === "percent") return `${Math.round(oferta.value)}% OFF`;
   return `${precio.porcentaje}% OFF`;
+}
+
+/**
+ * Seña por unidad de un producto, sobre el precio final (con la oferta ya
+ * aplicada). Nunca supera el precio.
+ */
+export function calcularSena(
+  producto: { deposit_type: TipoSena; deposit_value: number },
+  precioFinal: number,
+) {
+  const valor = Number(producto.deposit_value) || 0;
+  if (producto.deposit_type === "percent") {
+    return Math.min(precioFinal, Math.round((precioFinal * valor) / 100));
+  }
+  if (producto.deposit_type === "amount") return Math.min(precioFinal, Math.round(valor));
+  return 0;
 }

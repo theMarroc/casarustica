@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { FormularioCheckout } from "@/components/checkout/formulario-checkout";
 import { CabeceraPagina } from "@/components/site/cabecera-pagina";
 import { getUsuario } from "@/lib/auth";
-import { getAjustes } from "@/lib/db";
+import { getAjustes, getZonasEnvio } from "@/lib/db";
 import { aNumero, ajuste, ajusteCrudo, esVerdadero } from "@/lib/settings";
 import { createClient, supabaseConfigurado } from "@/lib/supabase/server";
 import type { Address } from "@/lib/types";
@@ -13,7 +13,11 @@ export const metadata: Metadata = {
 };
 
 export default async function PaginaCheckout() {
-  const [ajustes, usuario] = await Promise.all([getAjustes(), getUsuario()]);
+  const [ajustes, usuario, zonas] = await Promise.all([
+    getAjustes(),
+    getUsuario(),
+    getZonasEnvio(),
+  ]);
 
   let direcciones: Address[] = [];
   if (usuario && supabaseConfigurado()) {
@@ -48,13 +52,15 @@ export default async function PaginaCheckout() {
               : null
           }
           direcciones={direcciones}
-          costoEnvio={aNumero(ajustes.envio_costo)}
+          zonas={zonas}
+          condicionesEnvio={ajusteCrudo(ajustes, "envio_condiciones")}
           envioGratisDesde={aNumero(ajustes.envio_gratis_desde)}
           pedidoMinimo={aNumero(ajustes.pedido_minimo)}
           retiroActivo={esVerdadero(ajustes.retiro_activo ?? "true")}
           retiroDireccion={ajusteCrudo(ajustes, "retiro_direccion")}
           mercadopagoActivo={esVerdadero(ajustes.pago_mercadopago_activo)}
           transferenciaActiva={esVerdadero(ajustes.pago_transferencia_activo ?? "true")}
+          efectivoActivo={esVerdadero(ajustes.pago_efectivo_activo ?? "true")}
           whatsapp={ajuste(ajustes, "whatsapp_numero")}
         />
       </div>

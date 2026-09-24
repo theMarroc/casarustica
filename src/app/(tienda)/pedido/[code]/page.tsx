@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2, Clock, Home, Store } from "lucide-react";
+import { Banknote, CheckCircle2, Clock, Home, Store } from "lucide-react";
 
 import { DatosTransferencia } from "@/components/checkout/datos-transferencia";
 import { SubirComprobante } from "@/components/checkout/subir-comprobante";
@@ -47,19 +47,26 @@ export default async function PaginaPedido({
   const estado = ESTADOS_PEDIDO[pedido.status];
   const esperandoComprobante =
     pedido.payment_method === "transfer" && pedido.status === "pendiente_pago";
+  const saldo = Number(pedido.balance_due);
+  const aPagarAhora = Number(pedido.total) - saldo;
+  const confirmado = ["sena_pagada", "pagado", "en_preparacion", "listo", "entregado"].includes(
+    pedido.status,
+  );
 
   const mensajeWhatsapp = [
     `¡Hola! Te escribo por el pedido ${pedido.code}`,
     `Total: ${formatARS(Number(pedido.total))}`,
     pedido.payment_method === "transfer"
       ? "Te envío el comprobante de la transferencia."
-      : "Pagué con Mercado Pago.",
+      : pedido.payment_method === "cash"
+        ? "Lo pago en efectivo al retirar."
+        : "Pagué con Mercado Pago.",
   ].join("\n");
 
   return (
     <div className="contenedor max-w-3xl py-12 lg:py-16">
       <div className="flex flex-col items-center text-center">
-        {pedido.status === "pagado" || pedido.status === "entregado" ? (
+        {confirmado ? (
           <CheckCircle2 className="h-12 w-12 text-salvia" strokeWidth={1.3} />
         ) : (
           <Clock className="h-12 w-12 text-acento-hover" strokeWidth={1.3} />
@@ -72,8 +79,8 @@ export default async function PaginaPedido({
         <Ornamento className="mt-5" />
 
         <p className="mt-5 max-w-lg text-sm leading-relaxed text-carbon/70">
-          Guardá este link: desde acá podés ver el estado de tu pedido y subir el
-          comprobante.
+          Guardá este link: desde acá podés ver el estado de tu pedido
+          {pedido.payment_method === "transfer" ? " y subir el comprobante." : "."}
         </p>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -91,9 +98,28 @@ export default async function PaginaPedido({
             alias={ajusteCrudo(ajustes, "transferencia_alias")}
             cbu={ajusteCrudo(ajustes, "transferencia_cbu")}
             banco={ajusteCrudo(ajustes, "transferencia_banco")}
-            monto={Number(pedido.total)}
+            monto={aPagarAhora}
             codigo={pedido.code}
           />
+          {saldo > 0 ? (
+            <p className="mt-3 text-center text-sm text-carbon/70">
+              Es la seña y lo que se paga al confirmar. El resto ({formatARS(saldo)}) lo
+              pagás al retirar o al recibir.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {pedido.payment_method === "cash" && !["entregado", "cancelado"].includes(pedido.status) ? (
+        <section className="mt-10 rounded-marca border border-acento/50 bg-acento/12 p-6">
+          <h2 className="flex items-center gap-2 font-display text-xl text-nogal">
+            <Banknote className="h-5 w-5" strokeWidth={1.4} />
+            Pagás en efectivo al retirar
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-carbon/75">
+            Traé <strong className="font-semibold">{formatARS(Number(pedido.total))}</strong>.
+            Te avisamos por WhatsApp cuando esté listo para pasar a buscarlo.
+          </p>
         </section>
       ) : null}
 
@@ -117,6 +143,15 @@ export default async function PaginaPedido({
               <span className="text-carbon/80">
                 <span className="font-semibold text-carbon">{item.quantity}×</span>{" "}
                 {item.name}
+                {item.personalization?.length ? (
+                  <span className="mt-1 block text-xs leading-snug text-piedra-oscura">
+                    {item.personalization.map((linea) => (
+                      <span key={linea.etiqueta} className="block">
+                        <span className="font-semibold">{linea.etiqueta}:</span> {linea.valor}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
               </span>
               <span className="shrink-0 font-semibold text-carbon">
                 {formatARS(Number(item.subtotal))}
@@ -137,11 +172,16 @@ export default async function PaginaPedido({
           <div className="flex justify-between">
             <dt className="text-carbon/70">Envío</dt>
             <dd className="font-semibold">
-              {Number(pedido.shipping_total) > 0
-                ? formatARS(Number(pedido.shipping_total))
-                : pedido.delivery_type === "pickup"
-                  ? "Retiro"
-                  : "Sin cargo"}
+              {pedido.delivery_type === "pickup"
+                ? "Retiro"
+                : Number(pedido.shipping_total) > 0
+                  ? formatARS(Number(pedido.shipping_total))
+                  : "A coordinar"}
+              {pedido.shipping_zone ? (
+                <span className="ml-1 font-normal text-piedra-oscura">
+                  ({pedido.shipping_zone})
+                </span>
+              ) : null}
             </dd>
           </div>
           <div className="flex items-baseline justify-between border-t border-piedra/25 pt-3">
@@ -150,6 +190,18 @@ export default async function PaginaPedido({
               {formatARS(Number(pedido.total))}
             </dd>
           </div>
+          {saldo > 0 ? (
+            <>
+              <div className="flex justify-between">
+                <dt className="text-carbon/70">Al confirmar (seña incluida)</dt>
+                <dd className="font-semibold">{formatARS(aPagarAhora)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-carbon/70">Al retirar o recibir</dt>
+                <dd className="font-semibold">{formatARS(saldo)}</dd>
+              </div>
+            </>
+          ) : null}
         </dl>
 
         <div className="mt-6 grid gap-4 border-t border-piedra/25 pt-5 text-sm sm:grid-cols-2">

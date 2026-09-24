@@ -6,6 +6,7 @@ import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { useEffect } from "react";
 
 import { useCarrito } from "@/components/cart/carrito";
+import { DetalleLinea } from "@/components/cart/detalle-linea";
 import { estilosBoton } from "@/components/ui/boton";
 import { PlaceholderImagen } from "@/components/ui/marca";
 import { formatARS } from "@/lib/utils";
@@ -97,10 +98,11 @@ export function PanelCarrito() {
                         {item.unidad ? (
                           <p className="text-xs text-piedra-oscura">{item.unidad}</p>
                         ) : null}
+                        <DetalleLinea item={item} />
                       </div>
                       <button
                         onClick={() => quitar(item.clave)}
-                        className="p-1 text-piedra-oscura transition-colors hover:text-acento-fuerte"
+                        className="p-1 text-piedra-oscura transition-colors hover:text-alerta"
                         aria-label={`Quitar ${item.nombre}`}
                       >
                         <Trash2 className="h-4 w-4" />

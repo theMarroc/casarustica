@@ -15,9 +15,9 @@ update o delete).
 | 0. Arranque | Copia de Nahilén, repo propio, textos fijos de Nahilén afuera, esquema con datos iniciales de Casa Rústica, conexión a Supabase | Hecha |
 | 1. Identidad | Paleta con acento intercambiable (celeste / tiffany en `.marca-taller`), tipografías y estilo elegibles desde Ajustes › Apariencia, logos desde Ajustes, textos por defecto, datos de ejemplo, primer deploy | Hecha |
 | 2. Antes y después, eventos y portada | Comparador deslizable, portfolio de eventos (página `/trabajos`), secciones nuevas de portada, sacar el carrusel | Hecha |
-| 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña; efectivo al retirar; estados nuevos del pedido | Pendiente (depende de las respuestas de Silvina) |
-| 4. Servicios con presupuesto | Formulario con fotos (URL firmada), solicitudes con estados en el panel | Pendiente (depende de las respuestas) |
-| 5. Taller Azul Tiffany | `/taller`, talleres con fechas, cupo, seña, inscripción y lista de espera | Pendiente (depende de las respuestas) |
+| 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña opcional; efectivo al retirar; zonas de envío; estados nuevos del pedido | Hecha |
+| 4. Servicios con presupuesto | Restauración, ambientación y asesoría: formulario con fotos (URL firmada), solicitudes con estados en el panel | Pendiente |
+| 5. Taller Azul Tiffany | `/taller`, talleres y profesorado con fechas, cupo, duración y contenido; inscripción y seña por la web; lista de espera | Pendiente |
 | 6. Publicación | Variables en Vercel, Auth y webhook, prueba completa, cron para que Supabase no se pause, manual del panel | Pendiente |
 
 ## Decisiones tomadas
@@ -32,16 +32,17 @@ update o delete).
 - Las fotos que se suben desde el panel se achican en el navegador (menos los PNG, para no perder la transparencia de los logos).
 - Cambios de esquema en la base de producción: primero se publica el código que ya no usa lo que se borra, y recién después se corre el SQL.
 
-## Preguntas abiertas para Silvina
+## Respuestas de Silvina (24/09/2026)
 
-1. ¿Los productos a pedido llevan seña? ¿De qué porcentaje? ¿El efectivo al retirar vale para todo?
-2. ¿Qué talleres da hoy? Fechas fijas con cupo o a coordinar, precio y seña. Del Profesorado: duración y cómo cobra.
-3. ¿Inscripción y seña por la web, o agenda y consulta por WhatsApp?
-4. ¿Sigue haciendo restauración, ambientación y asesoría?
-5. ¿Hace envíos? ¿A dónde y a qué costo?
+1. La seña es opcional, producto por producto y taller por taller (porcentaje o monto fijo).
+2. Talleres y profesorado se crean y editan desde el panel: fechas, cupos, duración, contenido.
+3. Inscripción y seña por la web.
+4. Sigue haciendo restauración, ambientación y asesoría.
+5. Hace envíos y carga ella las condiciones (zonas con costo y un texto libre).
+
+Criterios tomados a partir de eso: si un pedido lleva seña, la seña se paga online y el resto al retirar o al recibir; el efectivo es solo para retiro; una inscripción sin pagar guarda el lugar 48 h (configurable); las cuotas mensuales del profesorado quedan fuera de la web.
 
 ## Decisiones abiertas
 
 - Tipografía y estilo de color: se eligen y se cambian desde Ajustes › Apariencia (Clásica, Cálida o Sobria; Casa Rústica o Azul Tiffany).
-- Aviso de solicitudes nuevas: botón de WhatsApp para el cliente y contador en el panel (recomendado).
-- Lugar sin pagar en talleres: se libera a las 48 h (recomendado).
+- Aviso de solicitudes nuevas: botón de WhatsApp para el cliente y contador en el panel.

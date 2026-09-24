@@ -2,9 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { BotonAgregar } from "@/components/cart/boton-agregar";
+import { estilosBoton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/campos";
 import { PlaceholderImagen } from "@/components/ui/marca";
-import { calcularPrecio, etiquetaOferta } from "@/lib/pricing";
+import { calcularPrecio, calcularSena, etiquetaOferta } from "@/lib/pricing";
 import type { Combo, Offer, Product } from "@/lib/types";
 import { formatARS } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ export function TarjetaProducto({
   const precio = calcularPrecio(producto, ofertas);
   const imagen = producto.images[0]?.url ?? null;
   const agotado = producto.track_stock && producto.stock <= 0;
+  const aPedido = producto.fulfillment === "a_pedido";
+  const personalizable = producto.custom_fields.length > 0;
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-marca border border-piedra/25 bg-white shadow-suave transition-shadow duration-300 hover:shadow-tarjeta">
@@ -48,6 +51,11 @@ export function TarjetaProducto({
           ) : null}
           {agotado ? (
             <Insignia className="bg-carbon text-hueso">Sin stock</Insignia>
+          ) : null}
+          {aPedido ? (
+            <Insignia className="bg-white/90 text-nogal">
+              {personalizable ? "Personalizable" : "A pedido"}
+            </Insignia>
           ) : null}
         </div>
       </Link>
@@ -87,22 +95,33 @@ export function TarjetaProducto({
             ) : null}
           </div>
 
-          <BotonAgregar
-            tamano="sm"
-            etiqueta="Agregar"
-            className="w-full sm:w-auto"
-            agotado={agotado}
-            item={{
-              tipo: "product",
-              id: producto.id,
-              slug: producto.slug,
-              nombre: producto.name,
-              precio: precio.final,
-              precioLista: precio.lista,
-              unidad: producto.unit,
-              imagen,
-            }}
-          />
+          {personalizable ? (
+            <Link
+              href={`/producto/${producto.slug}`}
+              className={estilosBoton("primario", "sm", "w-full sm:w-auto")}
+            >
+              Personalizar
+            </Link>
+          ) : (
+            <BotonAgregar
+              tamano="sm"
+              etiqueta="Agregar"
+              className="w-full sm:w-auto"
+              agotado={agotado}
+              item={{
+                tipo: "product",
+                id: producto.id,
+                slug: producto.slug,
+                nombre: producto.name,
+                precio: precio.final,
+                precioLista: precio.lista,
+                unidad: producto.unit,
+                imagen,
+                sena: calcularSena(producto, precio.final),
+                demora: aPedido ? (producto.lead_time ?? "a confirmar") : null,
+              }}
+            />
+          )}
         </div>
       </div>
     </article>

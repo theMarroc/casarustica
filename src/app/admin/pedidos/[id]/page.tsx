@@ -12,7 +12,7 @@ import { getAjustes } from "@/lib/db";
 import { ajuste, linkWhatsapp } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import type { Order, OrderItem } from "@/lib/types";
+import { METODOS_PAGO, type Order, type OrderItem } from "@/lib/types";
 import { formatARS, formatFecha } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -80,6 +80,21 @@ export default async function DetallePedido({
                     {item.kind === "combo" ? (
                       <Insignia className="ml-2 bg-acento/30 text-nogal">Set</Insignia>
                     ) : null}
+                    {Number(item.deposit_unit) > 0 ? (
+                      <Insignia className="ml-2 bg-salvia/15 text-salvia">
+                        Seña {formatARS(Number(item.deposit_unit))} c/u
+                      </Insignia>
+                    ) : null}
+                    {item.personalization?.length ? (
+                      <span className="mt-1.5 block rounded-marca bg-lino px-3 py-2 text-xs leading-relaxed text-carbon/80">
+                        {item.personalization.map((linea) => (
+                          <span key={linea.etiqueta} className="block">
+                            <span className="font-semibold text-nogal">{linea.etiqueta}:</span>{" "}
+                            {linea.valor}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="shrink-0 text-carbon/70">
                     {formatARS(Number(item.unit_price))} c/u ={" "}
@@ -103,8 +118,16 @@ export default async function DetallePedido({
                 </div>
               ) : null}
               <div className="flex justify-between">
-                <dt className="text-carbon/70">Envío</dt>
-                <dd>{formatARS(Number(pedido.shipping_total))}</dd>
+                <dt className="text-carbon/70">
+                  Envío{pedido.shipping_zone ? ` (${pedido.shipping_zone})` : ""}
+                </dt>
+                <dd>
+                  {pedido.delivery_type === "pickup"
+                    ? "Retira"
+                    : Number(pedido.shipping_total) === 0
+                      ? "A coordinar"
+                      : formatARS(Number(pedido.shipping_total))}
+                </dd>
               </div>
               <div className="mt-2 flex items-baseline justify-between border-t border-piedra/25 pt-3">
                 <dt className="text-[11px] uppercase tracking-[0.12em] text-piedra-oscura">
@@ -114,6 +137,20 @@ export default async function DetallePedido({
                   {formatARS(Number(pedido.total))}
                 </dd>
               </div>
+              {Number(pedido.balance_due) > 0 ? (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-carbon/70">Al confirmar (seña incluida)</dt>
+                    <dd className="font-semibold">
+                      {formatARS(Number(pedido.total) - Number(pedido.balance_due))}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-carbon/70">Saldo al retirar o entregar</dt>
+                    <dd className="font-semibold">{formatARS(Number(pedido.balance_due))}</dd>
+                  </div>
+                </>
+              ) : null}
             </dl>
           </PanelAdmin>
 
@@ -142,11 +179,7 @@ export default async function DetallePedido({
                 </>
               ) : null}
 
-              <FilaDato etiqueta="Forma de pago">
-                {pedido.payment_method === "transfer"
-                  ? "Transferencia bancaria"
-                  : "Mercado Pago"}
-              </FilaDato>
+              <FilaDato etiqueta="Forma de pago">{METODOS_PAGO[pedido.payment_method]}</FilaDato>
               <FilaDato etiqueta="Fecha">{formatFecha(pedido.created_at)}</FilaDato>
               {pedido.mp_payment_id ? (
                 <FilaDato etiqueta="ID de pago (Mercado Pago)">
@@ -166,7 +199,12 @@ export default async function DetallePedido({
 
         <div className="flex flex-col gap-6">
           <PanelAdmin titulo="Estado" className="h-fit">
-            <EstadoPedido pedidoId={pedido.id} estadoInicial={pedido.status} />
+            <EstadoPedido
+              pedidoId={pedido.id}
+              estadoInicial={pedido.status}
+              conSena={Number(pedido.balance_due) > 0}
+              conComprobante={pedido.payment_method === "transfer"}
+            />
           </PanelAdmin>
 
           <PanelAdmin titulo="Comprobante" className="h-fit">
@@ -191,7 +229,9 @@ export default async function DetallePedido({
               <p className="text-sm leading-relaxed text-carbon/65">
                 {pedido.payment_method === "transfer"
                   ? "Todavía no subió el comprobante."
-                  : "Este pedido se pagó con Mercado Pago, no hay comprobante para revisar."}
+                  : pedido.payment_method === "cash"
+                    ? "Paga en efectivo al retirar: no hay comprobante."
+                    : "Este pedido se pagó con Mercado Pago, no hay comprobante para revisar."}
               </p>
             )}
           </PanelAdmin>

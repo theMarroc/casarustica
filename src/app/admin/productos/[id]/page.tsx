@@ -5,6 +5,7 @@ import { CheckCircle2, ExternalLink, Trash2 } from "lucide-react";
 
 import { borrarProducto, guardarProducto } from "@/actions/admin/productos";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
+import { EditorPersonalizacion } from "@/components/admin/editor-personalizacion";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
 import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { GestorImagenes } from "@/components/admin/subidor";
@@ -169,6 +170,87 @@ export default async function EditorProducto({
           />
         </PanelAdmin>
 
+        <PanelAdmin
+          titulo="Cómo se vende"
+          texto="Si se hace a pedido, en la tienda se ve la demora y no se controla el stock."
+        >
+          <div className="grid gap-5 sm:grid-cols-2">
+            <fieldset className="flex flex-col gap-3">
+              <legend className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-nogal">
+                Modalidad
+              </legend>
+              <label className="flex items-start gap-2.5 text-sm text-carbon/80">
+                <input
+                  type="radio"
+                  name="fulfillment"
+                  value="stock"
+                  defaultChecked={(producto?.fulfillment ?? "stock") === "stock"}
+                  className="mt-0.5 h-4 w-4 accent-acento-fuerte"
+                />
+                <span>
+                  <span className="font-semibold text-nogal">Lo tengo hecho</span>
+                  <br />
+                  Se entrega enseguida. Podés controlar el stock abajo.
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 text-sm text-carbon/80">
+                <input
+                  type="radio"
+                  name="fulfillment"
+                  value="a_pedido"
+                  defaultChecked={producto?.fulfillment === "a_pedido"}
+                  className="mt-0.5 h-4 w-4 accent-acento-fuerte"
+                />
+                <span>
+                  <span className="font-semibold text-nogal">Se hace a pedido</span>
+                  <br />
+                  Lo hacés cuando alguien lo compra.
+                </span>
+              </label>
+              <CampoConEtiqueta etiqueta="Demora" ayuda="Solo si se hace a pedido. Ej: 10 a 15 días">
+                <Campo name="lead_time" defaultValue={producto?.lead_time ?? ""} />
+              </CampoConEtiqueta>
+            </fieldset>
+
+            <div className="flex flex-col gap-3">
+              <CampoConEtiqueta
+                etiqueta="Seña"
+                ayuda="Lo que se paga al comprar. El resto, al retirar o al recibir."
+              >
+                <Selector name="deposit_type" defaultValue={producto?.deposit_type ?? "none"}>
+                  <option value="none">Sin seña: se paga todo al comprar</option>
+                  <option value="percent">Porcentaje del precio</option>
+                  <option value="amount">Monto fijo por unidad</option>
+                </Selector>
+              </CampoConEtiqueta>
+              <CampoConEtiqueta
+                etiqueta="Valor de la seña"
+                ayuda="Un número: 50 es 50% o $50, según lo que elegiste arriba"
+              >
+                <Campo
+                  name="deposit_value"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  defaultValue={
+                    producto && producto.deposit_type !== "none"
+                      ? String(producto.deposit_value)
+                      : ""
+                  }
+                />
+              </CampoConEtiqueta>
+            </div>
+          </div>
+        </PanelAdmin>
+
+        <PanelAdmin
+          titulo="Personalización"
+          texto="Los datos que completa el cliente al pedirlo: nombres, una fecha, el color... Si no agregás ninguno, se vende tal cual."
+        >
+          <EditorPersonalizacion iniciales={producto?.custom_fields ?? []} />
+        </PanelAdmin>
+
         <PanelAdmin titulo="Stock y visibilidad">
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-3">
@@ -210,7 +292,8 @@ export default async function EditorProducto({
                 <span>
                   <span className="font-semibold text-nogal">Controlar stock</span>
                   <br />
-                  Descuenta unidades con cada pedido y avisa cuando se agota.
+                  Descuenta unidades con cada pedido y avisa cuando se agota. No
+                  aplica a lo que se hace a pedido.
                 </span>
               </label>
             </div>

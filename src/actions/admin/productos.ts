@@ -11,6 +11,16 @@ import type { EstadoAdmin } from "@/lib/types";
 
 const esquemaImagen = z.object({ url: z.string().url(), alt: z.string().default("") });
 
+const esquemaCampo = z.object({
+  clave: z.string().trim().min(1).max(60),
+  etiqueta: z.string().trim().min(1).max(80),
+  tipo: z.enum(["texto", "texto_largo", "fecha", "opciones"]),
+  opciones: z.array(z.string().trim().min(1).max(60)).max(30),
+  obligatorio: z.boolean(),
+  max: z.number().int().positive().max(1000).nullable(),
+  ayuda: z.string().trim().max(160),
+});
+
 const esquema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(2, "El nombre es obligatorio."),
@@ -25,6 +35,10 @@ const esquema = z.object({
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
   sort_order: z.coerce.number().int().default(0),
+  fulfillment: z.enum(["stock", "a_pedido"]).default("stock"),
+  lead_time: z.string().trim().max(40).default(""),
+  deposit_type: z.enum(["none", "percent", "amount"]).default("none"),
+  deposit_value: z.coerce.number().min(0, "La seña no puede ser negativa.").default(0),
 });
 
 function refrescarTienda() {
@@ -51,10 +65,34 @@ export async function guardarProducto(
     is_active: datos.get("is_active") === "on",
     is_featured: datos.get("is_featured") === "on",
     sort_order: datos.get("sort_order") ?? 0,
+    fulfillment: datos.get("fulfillment") ?? "stock",
+    lead_time: datos.get("lead_time") ?? "",
+    deposit_type: datos.get("deposit_type") ?? "none",
+    deposit_value: datos.get("deposit_value") || 0,
   });
 
   if (!analisis.success) {
     return { ok: false, mensaje: analisis.error.issues[0].message };
+  }
+  if (analisis.data.deposit_type === "percent" && analisis.data.deposit_value > 100) {
+    return { ok: false, mensaje: "La seña en porcentaje no puede pasar del 100%." };
+  }
+  if (analisis.data.deposit_type !== "none" && analisis.data.deposit_value <= 0) {
+    return { ok: false, mensaje: "Poné el valor de la seña, o elegí \"Sin seña\"." };
+  }
+
+  let camposCrudos: unknown;
+  try {
+    camposCrudos = JSON.parse(String(datos.get("custom_fields") || "[]"));
+  } catch {
+    return { ok: false, mensaje: "No se pudieron leer los datos para completar." };
+  }
+  const camposPersonalizados = z.array(esquemaCampo).max(12).safeParse(camposCrudos);
+  if (!camposPersonalizados.success) {
+    return { ok: false, mensaje: "Revisá los datos para completar: hay alguno incompleto." };
+  }
+  if (camposPersonalizados.data.some((c) => c.tipo === "opciones" && c.opciones.length < 2)) {
+    return { ok: false, mensaje: "Cada pregunta con opciones necesita al menos dos opciones." };
   }
 
   let imagenes: z.infer<typeof esquemaImagen>[] = [];
@@ -75,6 +113,11 @@ export async function guardarProducto(
     long_description: campos.long_description || null,
     category_id: campos.category_id || null,
     unit: campos.unit || null,
+    lead_time: campos.fulfillment === "a_pedido" ? campos.lead_time || null : null,
+    // Lo que se hace a pedido no descuenta stock.
+    track_stock: campos.fulfillment === "a_pedido" ? false : campos.track_stock,
+    deposit_value: campos.deposit_type === "none" ? 0 : campos.deposit_value,
+    custom_fields: camposPersonalizados.data,
   };
 
   const { data: guardado, error } = id

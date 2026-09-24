@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, CreditCard, Package, Truck } from "lucide-react";
+import { ChevronRight, Clock, CreditCard, Package, Truck, Wallet } from "lucide-react";
 
 import { AgregarConCantidad } from "@/components/cart/boton-agregar";
 import { GaleriaProducto } from "@/components/shop/galeria-producto";
@@ -9,8 +9,8 @@ import { GrillaProductos } from "@/components/shop/tarjeta-producto";
 import { estilosBoton } from "@/components/ui/boton";
 import { Insignia } from "@/components/ui/campos";
 import { IconoWhatsapp } from "@/components/ui/marca";
-import { getAjustes, getOfertas, getProducto, getProductos } from "@/lib/db";
-import { calcularPrecio, etiquetaOferta } from "@/lib/pricing";
+import { getAjustes, getOfertas, getProducto, getProductos, getZonasEnvio } from "@/lib/db";
+import { calcularPrecio, calcularSena, etiquetaOferta } from "@/lib/pricing";
 import { aNumero, ajuste, esVerdadero, linkWhatsapp } from "@/lib/settings";
 import { formatARS } from "@/lib/utils";
 
@@ -42,18 +42,27 @@ export default async function PaginaProducto({
 }) {
   const { slug } = await params;
 
-  const [producto, ofertas, ajustes] = await Promise.all([
+  const [producto, ofertas, ajustes, zonas] = await Promise.all([
     getProducto(slug),
     getOfertas(),
     getAjustes(),
+    getZonasEnvio(),
   ]);
 
   if (!producto || !producto.is_active) notFound();
 
   const precio = calcularPrecio(producto, ofertas);
   const agotado = producto.track_stock && producto.stock <= 0;
-  const costoEnvio = aNumero(ajustes.envio_costo);
+  const sena = calcularSena(producto, precio.final);
+  const aPedido = producto.fulfillment === "a_pedido";
   const envioGratis = aNumero(ajustes.envio_gratis_desde);
+  const costos = zonas.map((z) => z.cost).filter((c): c is number => c !== null);
+  const retiro = esVerdadero(ajustes.retiro_activo ?? "true");
+  const mediosDePago = [
+    esVerdadero(ajustes.pago_mercadopago_activo) ? "Mercado Pago" : null,
+    esVerdadero(ajustes.pago_transferencia_activo ?? "true") ? "transferencia" : null,
+    retiro && esVerdadero(ajustes.pago_efectivo_activo ?? "true") ? "efectivo al retirar" : null,
+  ].filter(Boolean);
 
   const relacionados = producto.category
     ? (await getProductos({ categoria: producto.category.slug }))
@@ -128,10 +137,37 @@ export default async function PaginaProducto({
             </p>
           ) : null}
 
+          {aPedido || sena > 0 ? (
+            <div className="mt-6 flex flex-col gap-2 rounded-marca border border-acento/50 bg-acento/15 px-4 py-3 text-sm leading-relaxed text-nogal">
+              {aPedido ? (
+                <p className="flex items-start gap-2.5">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} />
+                  <span>
+                    <strong className="font-semibold">Se hace a pedido.</strong>{" "}
+                    {producto.lead_time
+                      ? `Demora aproximada: ${producto.lead_time}.`
+                      : "Te confirmamos la demora por WhatsApp."}
+                  </span>
+                </p>
+              ) : null}
+              {sena > 0 ? (
+                <p className="flex items-start gap-2.5">
+                  <Wallet className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} />
+                  <span>
+                    <strong className="font-semibold">Seña de {formatARS(sena)}</strong> al
+                    comprar. El resto ({formatARS(precio.final - sena)}) lo pagás al
+                    retirarlo o al recibirlo.
+                  </span>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           <div className="mt-8">
             <AgregarConCantidad
               agotado={agotado}
               stockMaximo={producto.track_stock ? producto.stock : undefined}
+              campos={producto.custom_fields}
               item={{
                 tipo: "product",
                 id: producto.id,
@@ -141,6 +177,8 @@ export default async function PaginaProducto({
                 precioLista: precio.lista,
                 unidad: producto.unit,
                 imagen: producto.images[0]?.url ?? null,
+                sena,
+                demora: aPedido ? (producto.lead_time ?? "a confirmar") : null,
               }}
             />
           </div>
@@ -162,20 +200,20 @@ export default async function PaginaProducto({
             <li className="flex items-start gap-3">
               <Truck className="mt-0.5 h-4.5 w-4.5 shrink-0 text-acento-fuerte" strokeWidth={1.4} />
               <span>
-                Entrega a domicilio{" "}
-                {costoEnvio > 0 ? <>por {formatARS(costoEnvio)}</> : "a coordinar"}
-                {envioGratis > 0 ? <>, sin cargo desde {formatARS(envioGratis)}</> : null}
+                Envío a domicilio{" "}
+                {costos.length > 0
+                  ? `desde ${formatARS(Math.min(...costos))}, según la zona`
+                  : "con costo a coordinar según la zona"}
+                {envioGratis > 0 ? <>, sin cargo desde {formatARS(envioGratis)}</> : null}.
               </span>
             </li>
             <li className="flex items-start gap-3">
               <CreditCard className="mt-0.5 h-4.5 w-4.5 shrink-0 text-acento-fuerte" strokeWidth={1.4} />
               <span>
-                {esVerdadero(ajustes.pago_mercadopago_activo)
-                  ? "Pagás con Mercado Pago o por transferencia."
-                  : "Pagás por transferencia bancaria y nos enviás el comprobante."}
+                Pagás con {mediosDePago.join(", ").replace(/, ([^,]*)$/, " o $1")}.
               </span>
             </li>
-            {esVerdadero(ajustes.retiro_activo ?? "true") ? (
+            {retiro ? (
               <li className="flex items-start gap-3">
                 <Package className="mt-0.5 h-4.5 w-4.5 shrink-0 text-acento-fuerte" strokeWidth={1.4} />
                 <span>También podés retirarlo sin costo.</span>

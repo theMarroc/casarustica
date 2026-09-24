@@ -72,13 +72,15 @@ export const AJUSTES_POR_DEFECTO = {
   // --- Pagos -------------------------------------------------------------
   pago_transferencia_activo: "true",
   pago_mercadopago_activo: "false",
+  pago_efectivo_activo: "true",
   transferencia_titular: "",
   transferencia_alias: "",
   transferencia_cbu: "",
   transferencia_banco: "",
 
   // --- Envíos ------------------------------------------------------------
-  envio_costo: "0",
+  // Los costos de envío van por zona (tabla shipping_zones).
+  envio_condiciones: "",
   envio_gratis_desde: "0",
   pedido_minimo: "0",
   retiro_activo: "true",

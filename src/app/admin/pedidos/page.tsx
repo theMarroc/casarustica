@@ -5,7 +5,7 @@ import { CheckCircle2, FileCheck, Home, Store } from "lucide-react";
 import { PanelAdmin, SinDatos, TituloAdmin } from "@/components/admin/piezas";
 import { Insignia } from "@/components/ui/campos";
 import { createClient } from "@/lib/supabase/server";
-import { ESTADOS_PEDIDO, type Order, type OrderStatus } from "@/lib/types";
+import { ESTADOS_PEDIDO, METODOS_PAGO, type Order, type OrderStatus } from "@/lib/types";
 import { formatARS, formatFecha } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -16,8 +16,10 @@ export const metadata: Metadata = {
 const FILTROS = [
   { valor: "", texto: "Todos" },
   { valor: "por_revisar", texto: "Por revisar" },
+  { valor: "sena_pagada", texto: "Con seña" },
   { valor: "pagado", texto: "Pagados" },
   { valor: "en_preparacion", texto: "En preparación" },
+  { valor: "listo", texto: "Listos" },
   { valor: "entregado", texto: "Entregados" },
   { valor: "cancelado", texto: "Cancelados" },
 ] as const;
@@ -125,9 +127,7 @@ export default async function PedidosAdmin({
                           <Store className="h-3 w-3" />
                         )}
                         {pedido.delivery_type === "delivery" ? "Envío" : "Retiro"} ·{" "}
-                        {pedido.payment_method === "transfer"
-                          ? "Transferencia"
-                          : "Mercado Pago"}{" "}
+                        {METODOS_PAGO[pedido.payment_method]}{" "}
                         · {formatFecha(pedido.created_at)}
                       </p>
                     </div>

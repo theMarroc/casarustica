@@ -10,8 +10,14 @@ import {
   type ReactNode,
 } from "react";
 
+import { huellaPersonalizacion, type LineaPersonalizacion } from "@/lib/personalizacion";
+
 export type ItemCarrito = {
-  /** Identifica la línea del carrito: `product:<id>` o `combo:<id>`. */
+  /**
+   * Identifica la línea del carrito: `product:<id>` o `combo:<id>`, más una
+   * huella de la personalización si la tiene (dos carteles con nombres
+   * distintos son dos líneas).
+   */
   clave: string;
   tipo: "product" | "combo";
   id: string;
@@ -22,6 +28,14 @@ export type ItemCarrito = {
   unidad: string | null;
   imagen: string | null;
   cantidad: number;
+  /** Lo que completó el cliente tal cual lo escribió (lo valida el servidor). */
+  valores?: Record<string, string>;
+  /** Lo mismo, listo para mostrar. */
+  detalle?: LineaPersonalizacion[];
+  /** Seña por unidad; 0 o ausente si no lleva. */
+  sena?: number;
+  /** Demora, si se hace a pedido. */
+  demora?: string | null;
 };
 
 export type NuevoItem = Omit<ItemCarrito, "clave" | "cantidad">;
@@ -121,8 +135,9 @@ function guardar(items: ItemCarrito[]) {
   avisar();
 }
 
-function claveDe(tipo: ItemCarrito["tipo"], id: string) {
-  return `${tipo}:${id}`;
+function claveDe(item: NuevoItem) {
+  const base = `${item.tipo}:${item.id}`;
+  return item.detalle?.length ? `${base}:${huellaPersonalizacion(item.detalle)}` : base;
 }
 
 /* ========================================================================== */
@@ -133,6 +148,10 @@ type ContextoCarrito = {
   cantidadTotal: number;
   subtotal: number;
   ahorro: number;
+  /** Seña de los productos que la llevan. */
+  senaTotal: number;
+  /** Lo que queda de esos productos para pagar al retirar o al recibir. */
+  saldoTotal: number;
   panelAbierto: boolean;
   agregar: (item: NuevoItem, cantidad?: number) => void;
   cambiarCantidad: (clave: string, cantidad: number) => void;
@@ -154,7 +173,7 @@ export function ProveedorCarrito({ children }: { children: ReactNode }) {
   const [panelAbierto, setPanelAbierto] = useState(false);
 
   const agregar = useCallback((item: NuevoItem, cantidad = 1) => {
-    const clave = claveDe(item.tipo, item.id);
+    const clave = claveDe(item);
     const actuales = estado.items;
     const existente = actuales.find((i) => i.clave === clave);
 
@@ -190,6 +209,11 @@ export function ProveedorCarrito({ children }: { children: ReactNode }) {
       (acc, i) => acc + Math.max(i.precioLista - i.precio, 0) * i.cantidad,
       0,
     );
+    const senaTotal = items.reduce((acc, i) => acc + (i.sena ?? 0) * i.cantidad, 0);
+    const saldoTotal = items.reduce(
+      (acc, i) => acc + (i.sena ? (i.precio - i.sena) * i.cantidad : 0),
+      0,
+    );
 
     return {
       items,
@@ -197,6 +221,8 @@ export function ProveedorCarrito({ children }: { children: ReactNode }) {
       cantidadTotal,
       subtotal,
       ahorro,
+      senaTotal,
+      saldoTotal,
       panelAbierto,
       agregar,
       cambiarCantidad,

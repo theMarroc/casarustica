@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getUsuario } from "@/lib/auth";
-import { calcularPrecio } from "@/lib/pricing";
+import { validarPersonalizacion } from "@/lib/personalizacion";
+import { calcularPrecio, calcularSena } from "@/lib/pricing";
 import { aNumero, esVerdadero } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { supabaseConfigurado } from "@/lib/supabase/server";
-import type { Offer, OrderItem } from "@/lib/types";
+import type { CampoPersonalizable, Offer, OrderItem } from "@/lib/types";
 import { generarCodigoPedido, tokenAleatorio } from "@/lib/utils";
 
 export type ResultadoPedido =
@@ -20,6 +21,7 @@ const esquemaItem = z.object({
   tipo: z.enum(["product", "combo"]),
   id: z.string().min(1),
   cantidad: z.number().int().min(1).max(99),
+  valores: z.record(z.string(), z.string().max(1000)).optional(),
 });
 
 const esquemaPedido = z.object({
@@ -30,7 +32,8 @@ const esquemaPedido = z.object({
     .min(6, "Necesitamos un teléfono para coordinar la entrega."),
   email: z.union([z.string().trim().email("Revisá el correo."), z.literal("")]),
   entrega: z.enum(["delivery", "pickup"]),
-  pago: z.enum(["mercadopago", "transfer"]),
+  pago: z.enum(["mercadopago", "transfer", "cash"]),
+  zona: z.string().trim().default(""),
   calle: z.string().trim().default(""),
   numero: z.string().trim().default(""),
   piso: z.string().trim().default(""),
@@ -66,6 +69,7 @@ export async function crearPedido(
     email: datos.get("email") ?? "",
     entrega: datos.get("entrega"),
     pago: datos.get("pago"),
+    zona: datos.get("zona") ?? "",
     calle: datos.get("calle") ?? "",
     numero: datos.get("numero") ?? "",
     piso: datos.get("piso") ?? "",
@@ -113,10 +117,17 @@ export async function crearPedido(
   }
   if (
     formulario.pago === "transfer" &&
-    ajustes.pago_transferencia_activo !== undefined &&
-    !esVerdadero(ajustes.pago_transferencia_activo || "true")
+    !esVerdadero(ajustes.pago_transferencia_activo ?? "true")
   ) {
     return { ok: false, mensaje: "El pago por transferencia no está disponible." };
+  }
+  if (formulario.pago === "cash") {
+    const efectivoActivo =
+      esVerdadero(ajustes.pago_efectivo_activo ?? "true") &&
+      esVerdadero(ajustes.retiro_activo ?? "true");
+    if (!efectivoActivo || formulario.entrega !== "pickup") {
+      return { ok: false, mensaje: "El pago en efectivo es solo para retirar en el showroom." };
+    }
   }
 
   // --- Recalculamos TODOS los precios en el servidor ----------------------
@@ -128,7 +139,9 @@ export async function crearPedido(
     idsProductos.length
       ? supabase
           .from("products")
-          .select("id, name, price, category_id, is_active, stock, track_stock")
+          .select(
+            "id, name, price, category_id, is_active, stock, track_stock, custom_fields, deposit_type, deposit_value",
+          )
           .in("id", idsProductos)
       : Promise.resolve({ data: [], error: null }),
     idsCombos.length
@@ -148,10 +161,13 @@ export async function crearPedido(
 
   type LineaPedido = Omit<OrderItem, "id" | "order_id">;
   const lineas: LineaPedido[] = [];
-  const bajasDeStock: { id: string; nuevo: number }[] = [];
+  // Un mismo producto puede venir en varias líneas (con distinta personalización).
+  const unidadesPorProducto = new Map<string, number>();
 
   let itemsTotal = 0;
   let descuentoTotal = 0;
+  let senaTotal = 0;
+  let saldo = 0;
 
   for (const item of items) {
     if (item.tipo === "product") {
@@ -163,11 +179,12 @@ export async function crearPedido(
         };
       }
 
-      if (producto.track_stock && producto.stock < item.cantidad) {
-        return {
-          ok: false,
-          mensaje: `Nos queda${producto.stock === 1 ? "" : "n"} ${producto.stock} de ${producto.name}. Ajustá la cantidad.`,
-        };
+      const campos = (
+        Array.isArray(producto.custom_fields) ? producto.custom_fields : []
+      ) as CampoPersonalizable[];
+      const personalizacion = validarPersonalizacion(campos, item.valores ?? {});
+      if (!personalizacion.ok) {
+        return { ok: false, mensaje: `${producto.name}: ${personalizacion.mensaje}` };
       }
 
       const precio = calcularPrecio(
@@ -178,9 +195,15 @@ export async function crearPedido(
         },
         ofertas,
       );
+      const sena = calcularSena(
+        { deposit_type: producto.deposit_type, deposit_value: Number(producto.deposit_value) },
+        precio.final,
+      );
 
       itemsTotal += precio.lista * item.cantidad;
       descuentoTotal += precio.descuento * item.cantidad;
+      senaTotal += sena * item.cantidad;
+      if (sena > 0) saldo += (precio.final - sena) * item.cantidad;
 
       lineas.push({
         kind: "product",
@@ -190,11 +213,14 @@ export async function crearPedido(
         unit_price: precio.final,
         quantity: item.cantidad,
         subtotal: precio.final * item.cantidad,
+        personalization: personalizacion.lineas.length ? personalizacion.lineas : null,
+        deposit_unit: sena,
       });
 
-      if (producto.track_stock) {
-        bajasDeStock.push({ id: producto.id, nuevo: producto.stock - item.cantidad });
-      }
+      unidadesPorProducto.set(
+        producto.id,
+        (unidadesPorProducto.get(producto.id) ?? 0) + item.cantidad,
+      );
     } else {
       const combo = (respCombos.data ?? []).find((c) => c.id === item.id);
       if (!combo || !combo.is_active) {
@@ -215,8 +241,31 @@ export async function crearPedido(
         unit_price: precio,
         quantity: item.cantidad,
         subtotal: precio * item.cantidad,
+        personalization: null,
+        deposit_unit: 0,
       });
     }
+  }
+
+  const bajasDeStock: { id: string; nuevo: number }[] = [];
+  for (const [id, unidades] of unidadesPorProducto) {
+    const producto = (respProductos.data ?? []).find((p) => p.id === id);
+    if (!producto?.track_stock) continue;
+    if (producto.stock < unidades) {
+      return {
+        ok: false,
+        mensaje: `Nos queda${producto.stock === 1 ? "" : "n"} ${producto.stock} de ${producto.name}. Ajustá la cantidad.`,
+      };
+    }
+    bajasDeStock.push({ id, nuevo: producto.stock - unidades });
+  }
+
+  if (formulario.pago === "cash" && senaTotal > 0) {
+    return {
+      ok: false,
+      mensaje:
+        "Este pedido lleva seña: elegí Mercado Pago o transferencia para pagarla, y el resto lo pagás en efectivo al retirar.",
+    };
   }
 
   const subtotal = itemsTotal - descuentoTotal;
@@ -226,13 +275,25 @@ export async function crearPedido(
     return { ok: false, mensaje: `El pedido mínimo es de $${pedidoMinimo}.` };
   }
 
-  const envioGratisDesde = aNumero(ajustes.envio_gratis_desde);
-  const envio =
-    formulario.entrega === "pickup"
-      ? 0
-      : envioGratisDesde > 0 && subtotal >= envioGratisDesde
-        ? 0
-        : aNumero(ajustes.envio_costo);
+  // --- Envío según la zona -------------------------------------------------
+  let envio = 0;
+  let zonaElegida: string | null = null;
+  if (formulario.entrega === "delivery") {
+    const { data: zonas } = await supabase
+      .from("shipping_zones")
+      .select("id, name, cost")
+      .eq("is_active", true);
+
+    if (zonas && zonas.length > 0) {
+      const zona = zonas.find((z) => z.id === formulario.zona);
+      if (!zona) return { ok: false, mensaje: "Elegí la zona de envío." };
+      zonaElegida = zona.name;
+      envio = zona.cost === null ? 0 : Number(zona.cost);
+    }
+
+    const envioGratisDesde = aNumero(ajustes.envio_gratis_desde);
+    if (envioGratisDesde > 0 && subtotal >= envioGratisDesde) envio = 0;
+  }
 
   const total = subtotal + envio;
 
@@ -257,12 +318,15 @@ export async function crearPedido(
       address_city: formulario.entrega === "delivery" ? formulario.ciudad : null,
       address_zone: formulario.barrio || null,
       address_notes: formulario.indicaciones || null,
+      shipping_zone: zonaElegida,
       payment_method: formulario.pago,
       status: "pendiente_pago",
       items_total: itemsTotal,
       discount_total: descuentoTotal,
       shipping_total: envio,
       total,
+      deposit_total: senaTotal,
+      balance_due: saldo,
       notes: formulario.notas || null,
     })
     .select("id, code, access_token")
@@ -313,6 +377,7 @@ export async function crearPedido(
       token: pedido.access_token,
       lineas,
       envio,
+      aPagarAhora: saldo > 0 ? total - saldo : null,
       email: formulario.email || usuario?.email || undefined,
     });
 
@@ -335,6 +400,8 @@ type DatosPreferencia = {
   token: string;
   lineas: Omit<OrderItem, "id" | "order_id">[];
   envio: number;
+  /** Si el pedido lleva seña, lo que se cobra ahora, en una sola línea. */
+  aPagarAhora: number | null;
   email?: string;
 };
 
@@ -351,28 +418,41 @@ async function crearPreferencia(datos: DatosPreferencia): Promise<string | null>
 
     const volverA = `${sitio}/pedido/${datos.codigo}?t=${datos.token}`;
 
+    const items =
+      datos.aPagarAhora !== null
+        ? [
+            {
+              id: datos.codigo,
+              title: `Pedido ${datos.codigo}: seña y pago al confirmar`,
+              quantity: 1,
+              unit_price: datos.aPagarAhora,
+              currency_id: "ARS",
+            },
+          ]
+        : [
+            ...datos.lineas.map((linea) => ({
+              id: linea.product_id ?? linea.combo_id ?? linea.name,
+              title: linea.name,
+              quantity: linea.quantity,
+              unit_price: Number(linea.unit_price),
+              currency_id: "ARS",
+            })),
+            ...(datos.envio > 0
+              ? [
+                  {
+                    id: "envio",
+                    title: "Envío a domicilio",
+                    quantity: 1,
+                    unit_price: datos.envio,
+                    currency_id: "ARS",
+                  },
+                ]
+              : []),
+          ];
+
     const respuesta = await preferencia.create({
       body: {
-        items: [
-          ...datos.lineas.map((linea) => ({
-            id: linea.product_id ?? linea.combo_id ?? linea.name,
-            title: linea.name,
-            quantity: linea.quantity,
-            unit_price: Number(linea.unit_price),
-            currency_id: "ARS",
-          })),
-          ...(datos.envio > 0
-            ? [
-                {
-                  id: "envio",
-                  title: "Envío a domicilio",
-                  quantity: 1,
-                  unit_price: datos.envio,
-                  currency_id: "ARS",
-                },
-              ]
-            : []),
-        ],
+        items,
         payer: datos.email ? { email: datos.email } : undefined,
         external_reference: datos.pedidoId,
         statement_descriptor: "CASA RUSTICA",

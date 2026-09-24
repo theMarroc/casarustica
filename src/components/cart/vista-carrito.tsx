@@ -5,20 +5,19 @@ import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 import { useCarrito } from "@/components/cart/carrito";
+import { DetalleLinea } from "@/components/cart/detalle-linea";
 import { Boton, estilosBoton } from "@/components/ui/boton";
 import { PlaceholderImagen } from "@/components/ui/marca";
 import { formatARS } from "@/lib/utils";
 
 export function VistaCarrito({
-  costoEnvio,
   envioGratisDesde,
   pedidoMinimo,
 }: {
-  costoEnvio: number;
   envioGratisDesde: number;
   pedidoMinimo: number;
 }) {
-  const { items, listo, subtotal, ahorro, cambiarCantidad, quitar, vaciar } =
+  const { items, listo, subtotal, ahorro, senaTotal, saldoTotal, cambiarCantidad, quitar, vaciar } =
     useCarrito();
 
   if (!listo) {
@@ -45,7 +44,6 @@ export function VistaCarrito({
   }
 
   const envioGratis = envioGratisDesde > 0 && subtotal >= envioGratisDesde;
-  const envio = envioGratis ? 0 : costoEnvio;
   const faltaParaMinimo = Math.max(pedidoMinimo - subtotal, 0);
 
   return (
@@ -91,6 +89,7 @@ export function VistaCarrito({
                     {item.unidad ? (
                       <p className="text-xs text-piedra-oscura">{item.unidad}</p>
                     ) : null}
+                    <DetalleLinea item={item} />
                     <p className="mt-1 text-sm text-carbon/70">
                       {formatARS(item.precio)} por unidad
                       {item.precioLista > item.precio ? (
@@ -103,7 +102,7 @@ export function VistaCarrito({
 
                   <button
                     onClick={() => quitar(item.clave)}
-                    className="p-1 text-piedra-oscura transition-colors hover:text-acento-fuerte"
+                    className="p-1 text-piedra-oscura transition-colors hover:text-alerta"
                     aria-label={`Quitar ${item.nombre}`}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -172,21 +171,26 @@ export function VistaCarrito({
             <dd className="font-semibold text-carbon">
               {envioGratis ? (
                 <span className="text-salvia">Sin cargo</span>
-              ) : envio > 0 ? (
-                formatARS(envio)
               ) : (
-                "A coordinar"
+                "Según la zona"
               )}
             </dd>
           </div>
         </dl>
 
         <div className="mt-4 flex items-baseline justify-between border-t border-piedra/25 pt-4">
-          <span className="text-sm uppercase tracking-[0.1em] text-piedra-oscura">Total</span>
-          <span className="font-display text-2xl text-nogal">
-            {formatARS(subtotal + envio)}
+          <span className="text-sm uppercase tracking-[0.1em] text-piedra-oscura">
+            Subtotal
           </span>
+          <span className="font-display text-2xl text-nogal">{formatARS(subtotal)}</span>
         </div>
+
+        {senaTotal > 0 ? (
+          <p className="mt-3 rounded-marca bg-acento/20 px-3 py-2 text-xs leading-relaxed text-nogal">
+            Hay productos con seña: pagás {formatARS(subtotal - saldoTotal)} al confirmar
+            y {formatARS(saldoTotal)} al retirar o al recibir.
+          </p>
+        ) : null}
 
         {!envioGratis && envioGratisDesde > 0 ? (
           <p className="mt-3 rounded-marca bg-acento/20 px-3 py-2 text-xs text-nogal">

@@ -10,6 +10,7 @@ import {
   OFERTAS_DEMO,
   PRODUCTOS_DEMO,
   SECCIONES_DEMO,
+  ZONAS_DEMO,
 } from "./demo-data";
 import { createClient, supabaseConfigurado } from "./supabase/server";
 import type {
@@ -23,6 +24,7 @@ import type {
   Product,
   Section,
   Settings,
+  ZonaEnvio,
 } from "./types";
 
 /**
@@ -43,6 +45,10 @@ function ordenarImagenes(producto: Product): Product {
   return {
     ...producto,
     price: Number(producto.price),
+    deposit_value: Number(producto.deposit_value ?? 0),
+    fulfillment: producto.fulfillment ?? "stock",
+    deposit_type: producto.deposit_type ?? "none",
+    custom_fields: Array.isArray(producto.custom_fields) ? producto.custom_fields : [],
     images: [...(producto.images ?? [])].sort((a, b) => a.sort_order - b.sort_order),
   };
 }
@@ -315,4 +321,16 @@ export const getEventoPorId = cache(async (id: string): Promise<Evento | null> =
 
   if (error) throw new Error(`No se pudo leer el evento: ${error.message}`);
   return data ? ordenarFotos(data as Evento) : null;
+});
+
+export const getZonasEnvio = cache(async (incluirInactivas = false): Promise<ZonaEnvio[]> => {
+  if (modoDemo()) return ZONAS_DEMO;
+
+  const supabase = await createClient();
+  let consulta = supabase.from("shipping_zones").select("*").order("sort_order").order("name");
+  if (!incluirInactivas) consulta = consulta.eq("is_active", true);
+
+  const { data, error } = await consulta;
+  if (error) throw new Error(`No se pudieron leer las zonas de envío: ${error.message}`);
+  return (data ?? []).map((z) => ({ ...z, cost: z.cost === null ? null : Number(z.cost) }));
 });

@@ -1,4 +1,13 @@
-import type { AntesDespues, Category, Combo, Evento, Offer, Product, Section } from "./types";
+import type {
+  AntesDespues,
+  Category,
+  Combo,
+  Evento,
+  Offer,
+  Product,
+  Section,
+  ZonaEnvio,
+} from "./types";
 
 /**
  * Datos de demostración.
@@ -96,6 +105,11 @@ function producto(
     is_featured: false,
     sort_order: 0,
     created_at: new Date().toISOString(),
+    fulfillment: "stock",
+    lead_time: null,
+    custom_fields: [],
+    deposit_type: "none",
+    deposit_value: 0,
     images: [],
     category: null,
     ...parcial,
@@ -173,6 +187,19 @@ export const PRODUCTOS_DEMO: Product[] = [
     unit: "unidad",
     is_featured: true,
     sort_order: 1,
+    fulfillment: "a_pedido",
+    lead_time: "7 días",
+    custom_fields: [
+      {
+        clave: "nombre-o-frase",
+        etiqueta: "Nombre o frase",
+        tipo: "texto",
+        opciones: [],
+        obligatorio: true,
+        max: 25,
+        ayuda: "Va grabado en el mate",
+      },
+    ],
   }),
   producto({
     id: "p-7",
@@ -207,6 +234,39 @@ export const PRODUCTOS_DEMO: Product[] = [
     unit: "unidad",
     is_featured: true,
     sort_order: 1,
+    fulfillment: "a_pedido",
+    lead_time: "10 a 15 días",
+    deposit_type: "percent",
+    deposit_value: 50,
+    custom_fields: [
+      {
+        clave: "nombres",
+        etiqueta: "Nombres",
+        tipo: "texto",
+        opciones: [],
+        obligatorio: true,
+        max: 40,
+        ayuda: "Por ejemplo: Lucía y Martín",
+      },
+      {
+        clave: "fecha-de-la-boda",
+        etiqueta: "Fecha de la boda",
+        tipo: "fecha",
+        opciones: [],
+        obligatorio: true,
+        max: null,
+        ayuda: "",
+      },
+      {
+        clave: "color",
+        etiqueta: "Color de las letras",
+        tipo: "opciones",
+        opciones: ["Blanco", "Dorado", "Celeste"],
+        obligatorio: false,
+        max: null,
+        ayuda: "",
+      },
+    ],
   }),
   producto({
     id: "p-10",
@@ -383,4 +443,10 @@ export const EVENTOS_DEMO: Evento[] = [
     is_active: true,
     images: [],
   },
+];
+
+export const ZONAS_DEMO: ZonaEnvio[] = [
+  { id: "z-1", name: "Miramar", cost: null, sort_order: 1, is_active: true },
+  { id: "z-2", name: "Mar del Plata", cost: null, sort_order: 2, is_active: true },
+  { id: "z-3", name: "Otra localidad", cost: null, sort_order: 3, is_active: true },
 ];
