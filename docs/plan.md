@@ -12,9 +12,9 @@ update o delete).
 
 | Fase | Qué incluye | Estado |
 |---|---|---|
-| 0. Arranque | Copia de Nahilén, repo propio, textos fijos de Nahilén afuera, esquema con datos iniciales de Casa Rústica, conexión a Supabase | Hecha, falta la clave secreta |
+| 0. Arranque | Copia de Nahilén, repo propio, textos fijos de Nahilén afuera, esquema con datos iniciales de Casa Rústica, conexión a Supabase | Hecha |
 | 1. Identidad | Paleta con acento intercambiable (celeste / tiffany en `.marca-taller`), tipografías y estilo elegibles desde Ajustes › Apariencia, logos desde Ajustes, textos por defecto, datos de ejemplo, primer deploy | Hecha |
-| 2. Antes y después, eventos y portada | Comparador deslizable, portfolio de eventos, secciones nuevas de portada, sacar el carrusel | Pendiente |
+| 2. Antes y después, eventos y portada | Comparador deslizable, portfolio de eventos (página `/trabajos`), secciones nuevas de portada, sacar el carrusel | Hecha |
 | 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña; efectivo al retirar; estados nuevos del pedido | Pendiente (depende de las respuestas de Silvina) |
 | 4. Servicios con presupuesto | Formulario con fotos (URL firmada), solicitudes con estados en el panel | Pendiente (depende de las respuestas) |
 | 5. Taller Azul Tiffany | `/taller`, talleres con fechas, cupo, seña, inscripción y lista de espera | Pendiente (depende de las respuestas) |
@@ -28,6 +28,9 @@ update o delete).
 - Errores y botones de borrar usan su propio color (`alerta`), no el acento.
 - Las fotos de clientes se suben con URL firmada directo a Storage.
 - Repo público en GitHub (theMarroc/casarustica). Funciones de Vercel en São Paulo (`gru1`), igual que la base.
+- Antes y después y eventos viven en la página Trabajos (`/trabajos`, cada evento en `/trabajos/<slug>`). El carrusel de fotos se sacó.
+- Las fotos que se suben desde el panel se achican en el navegador (menos los PNG, para no perder la transparencia de los logos).
+- Cambios de esquema en la base de producción: primero se publica el código que ya no usa lo que se borra, y recién después se corre el SQL.
 
 ## Preguntas abiertas para Silvina
 

@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { exigirAdmin } from "@/lib/auth";
+import { slugDisponible } from "@/lib/slugs";
 import { createClient } from "@/lib/supabase/server";
 import type { EstadoAdmin } from "@/lib/types";
-import { slugify } from "@/lib/utils";
 
 const esquemaImagen = z.object({ url: z.string().url(), alt: z.string().default("") });
 
@@ -29,30 +29,6 @@ const esquema = z.object({
 
 function refrescarTienda() {
   revalidatePath("/", "layout");
-}
-
-/** Genera un slug libre, agregando un número si ya existe. */
-async function slugDisponible(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  tabla: "products" | "combos" | "categories",
-  base: string,
-  idActual?: string,
-) {
-  const raiz = slugify(base) || "producto";
-  let candidato = raiz;
-  let intento = 2;
-
-  for (;;) {
-    const { data } = await supabase
-      .from(tabla)
-      .select("id")
-      .eq("slug", candidato)
-      .maybeSingle();
-
-    if (!data || data.id === idActual) return candidato;
-    candidato = `${raiz}-${intento}`;
-    intento += 1;
-  }
 }
 
 export async function guardarProducto(

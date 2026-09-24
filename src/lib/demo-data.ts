@@ -1,4 +1,4 @@
-import type { Category, Combo, Offer, Product, Section } from "./types";
+import type { AntesDespues, Category, Combo, Evento, Offer, Product, Section } from "./types";
 
 /**
  * Datos de demostración.
@@ -285,11 +285,12 @@ export const SECCIONES_DEMO: Section[] = [
   { key: "destacados", label: "Productos destacados", description: null, is_enabled: true, sort_order: 4 },
   { key: "ofertas", label: "Ofertas vigentes", description: null, is_enabled: true, sort_order: 5 },
   { key: "combos", label: "Sets y kits", description: null, is_enabled: true, sort_order: 6 },
-  { key: "carrusel", label: "Carrusel de fotos", description: null, is_enabled: true, sort_order: 7 },
-  { key: "frase", label: "Franja con la frase", description: null, is_enabled: true, sort_order: 8 },
-  { key: "mapa_delivery", label: "Zona de entrega", description: null, is_enabled: true, sort_order: 9 },
-  { key: "faq", label: "Preguntas frecuentes", description: null, is_enabled: true, sort_order: 10 },
-  { key: "newsletter", label: "Newsletter", description: null, is_enabled: true, sort_order: 11 },
+  { key: "antes_despues", label: "Antes y después", description: null, is_enabled: true, sort_order: 7 },
+  { key: "eventos", label: "Eventos y bodas", description: null, is_enabled: true, sort_order: 8 },
+  { key: "frase", label: "Franja con la frase", description: null, is_enabled: true, sort_order: 9 },
+  { key: "mapa_delivery", label: "Zona de entrega", description: null, is_enabled: true, sort_order: 10 },
+  { key: "faq", label: "Preguntas frecuentes", description: null, is_enabled: true, sort_order: 11 },
+  { key: "newsletter", label: "Newsletter", description: null, is_enabled: true, sort_order: 12 },
 ];
 
 export const BENEFICIOS_DEMO = [
@@ -331,5 +332,55 @@ export const FAQS_DEMO = [
       "Podés retirarlo por el showroom en Miramar o coordinar el envío. Trabajamos en Miramar, Mar del Plata y zona.",
     sort_order: 4,
     is_active: true,
+  },
+];
+
+// Sin fotos: el comparador y las tarjetas muestran sus rellenos de ejemplo.
+export const ANTES_DESPUES_DEMO: AntesDespues[] = [
+  {
+    id: "ad-1",
+    title: "Cómoda de los años 60",
+    description: "Lijada, pintada a la tiza y con herrajes nuevos.",
+    before_url: "",
+    after_url: "",
+    sort_order: 1,
+    is_active: true,
+  },
+  {
+    id: "ad-2",
+    title: "Silla de la abuela",
+    description: "Estructura reforzada, efecto madera y tapizado nuevo.",
+    before_url: "",
+    after_url: "",
+    sort_order: 2,
+    is_active: true,
+  },
+];
+
+export const EVENTOS_DEMO: Evento[] = [
+  {
+    id: "ev-1",
+    slug: "boda-en-el-campo",
+    title: "Boda en el campo",
+    kind: "Boda",
+    event_date: null,
+    place: "Miramar",
+    description:
+      "Mesas vintage blancas, cartel de bienvenida y centros con hortensias en latas.",
+    sort_order: 1,
+    is_active: true,
+    images: [],
+  },
+  {
+    id: "ev-2",
+    slug: "cumpleanos-de-15",
+    title: "Cumpleaños de 15",
+    kind: "Cumpleaños",
+    event_date: null,
+    place: "Mar del Plata",
+    description: "Souvenirs personalizados y ambientación en tonos pastel.",
+    sort_order: 2,
+    is_active: true,
+    images: [],
   },
 ];

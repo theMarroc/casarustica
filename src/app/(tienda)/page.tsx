@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { BarraBeneficios } from "@/components/home/barra-beneficios";
-import { Carrusel, type FotoCarrusel } from "@/components/home/carrusel";
 import { SeccionCategorias } from "@/components/home/categorias";
 import { EncabezadoSeccion } from "@/components/home/encabezado-seccion";
 import { FranjaFrase } from "@/components/home/franja-frase";
@@ -11,15 +10,17 @@ import { Newsletter } from "@/components/home/newsletter";
 import { Portada } from "@/components/home/portada";
 import { SeccionPreguntas } from "@/components/home/preguntas";
 import { GrillaProductos, TarjetaCombo } from "@/components/shop/tarjeta-producto";
+import { TarjetaAntesDespues, TarjetaEvento } from "@/components/trabajos/tarjetas";
 import { AvisoDemo } from "@/components/site/aviso-demo";
 import { estilosBoton } from "@/components/ui/boton";
 import {
   getAjustes,
+  getAntesDespues,
   getBeneficios,
   getCategorias,
   getCombos,
+  getEventos,
   getFaqs,
-  getGaleria,
   getOfertas,
   getProductos,
   getSecciones,
@@ -39,7 +40,8 @@ export default async function Inicio() {
     combos,
     beneficios,
     preguntas,
-    galeria,
+    trabajos,
+    eventos,
   ] = await Promise.all([
     getAjustes(),
     getSecciones(),
@@ -50,19 +52,11 @@ export default async function Inicio() {
     getCombos(),
     getBeneficios(),
     getFaqs(),
-    getGaleria(),
+    getAntesDespues(),
+    getEventos(),
   ]);
 
   const enOferta = todos.filter((p) => calcularPrecio(p, ofertas).oferta !== null);
-
-  // El carrusel usa la galeria del panel; si esta vacia, cae en las fotos
-  // de los productos para no quedar en blanco.
-  const fotos: FotoCarrusel[] = galeria.length
-    ? galeria.map((g) => ({ id: g.id, url: g.url, caption: g.caption }))
-    : todos
-        .filter((p) => p.images[0])
-        .slice(0, 8)
-        .map((p) => ({ id: p.id, url: p.images[0].url, caption: p.name }));
 
   const bloques: Record<string, ReactNode> = {
     hero: <Portada ajustes={ajustes} />,
@@ -124,7 +118,50 @@ export default async function Inicio() {
           </div>
         </section>
       ) : null,
-    carrusel: <Carrusel fotos={fotos} ajustes={ajustes} />,
+    antes_despues:
+      trabajos.length > 0 ? (
+        <section className="bg-hueso py-16 lg:py-24">
+          <div className="contenedor">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <EncabezadoSeccion
+                titulo={ajuste(ajustes, "antes_despues_titulo")}
+                tituloCursiva={ajuste(ajustes, "antes_despues_titulo_cursiva")}
+                texto={ajuste(ajustes, "antes_despues_texto")}
+              />
+              <Link href="/trabajos" className={estilosBoton("secundario", "md")}>
+                Ver todos los trabajos
+              </Link>
+            </div>
+            <div className="mt-10 grid gap-8 md:grid-cols-2">
+              {trabajos.slice(0, 2).map((trabajo) => (
+                <TarjetaAntesDespues key={trabajo.id} trabajo={trabajo} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null,
+    eventos:
+      eventos.length > 0 ? (
+        <section className="bg-lino py-16 lg:py-24">
+          <div className="contenedor">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <EncabezadoSeccion
+                titulo={ajuste(ajustes, "eventos_titulo")}
+                tituloCursiva={ajuste(ajustes, "eventos_titulo_cursiva")}
+                texto={ajuste(ajustes, "eventos_texto")}
+              />
+              <Link href="/trabajos#eventos" className={estilosBoton("secundario", "md")}>
+                Ver todos
+              </Link>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {eventos.slice(0, 3).map((evento) => (
+                <TarjetaEvento key={evento.id} evento={evento} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null,
     frase: <FranjaFrase ajustes={ajustes} />,
     mapa_delivery: <MapaDelivery ajustes={ajustes} />,
     faq: <SeccionPreguntas preguntas={preguntas} ajustes={ajustes} />,

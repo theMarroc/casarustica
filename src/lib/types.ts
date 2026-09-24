@@ -97,12 +97,35 @@ export type Faq = {
   is_active: boolean;
 };
 
-export type GalleryImage = {
+export type AntesDespues = {
   id: string;
-  url: string;
-  caption: string | null;
+  title: string;
+  description: string | null;
+  before_url: string;
+  after_url: string;
   sort_order: number;
   is_active: boolean;
+};
+
+export type EventoImagen = {
+  id: string;
+  event_id: string;
+  url: string;
+  alt: string | null;
+  sort_order: number;
+};
+
+export type Evento = {
+  id: string;
+  slug: string;
+  title: string;
+  kind: string | null;
+  event_date: string | null;
+  place: string | null;
+  description: string | null;
+  sort_order: number;
+  is_active: boolean;
+  images: EventoImagen[];
 };
 
 export type Settings = Record<string, string>;

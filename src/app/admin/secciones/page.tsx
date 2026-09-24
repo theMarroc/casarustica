@@ -92,8 +92,9 @@ export default async function SeccionesAdmin() {
 
       <p className="mt-5 text-xs leading-relaxed text-piedra-oscura">
         Algunas secciones se esconden solas cuando no hay nada que mostrar. Por ejemplo,
-        &ldquo;Ofertas&rdquo; solo aparece si hay alguna oferta activa, y el carrusel
-        necesita fotos cargadas en <strong>Textos y fotos</strong>.
+        &ldquo;Ofertas&rdquo; solo aparece si hay alguna oferta activa, y
+        &ldquo;Antes y después&rdquo; y &ldquo;Eventos&rdquo;, cuando cargaste alguno en
+        <strong> Trabajos</strong>.
       </p>
     </>
   );

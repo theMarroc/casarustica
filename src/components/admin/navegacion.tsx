@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarHeart,
   ExternalLink,
   FileText,
   LayoutDashboard,
@@ -12,6 +13,7 @@ import {
   Percent,
   Settings,
   ShoppingBag,
+  SquareSplitHorizontal,
   Tag,
   ToggleLeft,
   TrendingUp,
@@ -37,6 +39,13 @@ const SECCIONES = [
       { href: "/admin/productos", texto: "Productos", Icono: Package },
       { href: "/admin/categorias", texto: "Categorías", Icono: Tag },
       { href: "/admin/combos", texto: "Sets y kits", Icono: Package },
+    ],
+  },
+  {
+    titulo: "Trabajos",
+    enlaces: [
+      { href: "/admin/antes-y-despues", texto: "Antes y después", Icono: SquareSplitHorizontal },
+      { href: "/admin/eventos", texto: "Eventos", Icono: CalendarHeart },
     ],
   },
   {

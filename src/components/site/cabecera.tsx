@@ -13,6 +13,7 @@ const ENLACES = [
   { href: "/", texto: "Inicio" },
   { href: "/tienda", texto: "Tienda" },
   { href: "/sets", texto: "Sets y kits" },
+  { href: "/trabajos", texto: "Trabajos" },
   { href: "/nosotros", texto: "Nosotros" },
   { href: "/contacto", texto: "Contacto" },
 ];

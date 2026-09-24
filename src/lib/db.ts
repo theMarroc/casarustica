@@ -1,9 +1,11 @@
 import { cache } from "react";
 
 import {
+  ANTES_DESPUES_DEMO,
   BENEFICIOS_DEMO,
   CATEGORIAS_DEMO,
   COMBOS_DEMO,
+  EVENTOS_DEMO,
   FAQS_DEMO,
   OFERTAS_DEMO,
   PRODUCTOS_DEMO,
@@ -11,11 +13,12 @@ import {
 } from "./demo-data";
 import { createClient, supabaseConfigurado } from "./supabase/server";
 import type {
+  AntesDespues,
   Benefit,
   Category,
   Combo,
+  Evento,
   Faq,
-  GalleryImage,
   Offer,
   Product,
   Section,
@@ -229,14 +232,87 @@ export const getFaqs = cache(async (incluirInactivas = false): Promise<Faq[]> =>
   return data ?? [];
 });
 
-export const getGaleria = cache(async (incluirInactivas = false): Promise<GalleryImage[]> => {
-  if (modoDemo()) return [];
+export const getAntesDespues = cache(
+  async (incluirInactivos = false): Promise<AntesDespues[]> => {
+    if (modoDemo()) return ANTES_DESPUES_DEMO;
+
+    const supabase = await createClient();
+    let consulta = supabase
+      .from("before_after")
+      .select("*")
+      .order("sort_order")
+      .order("created_at", { ascending: false });
+    if (!incluirInactivos) consulta = consulta.eq("is_active", true);
+
+    const { data, error } = await consulta;
+    if (error) throw new Error(`No se pudieron leer los trabajos: ${error.message}`);
+    return data ?? [];
+  },
+);
+
+export const getAntesDespuesPorId = cache(async (id: string): Promise<AntesDespues | null> => {
+  if (modoDemo()) return ANTES_DESPUES_DEMO.find((t) => t.id === id) ?? null;
 
   const supabase = await createClient();
-  let consulta = supabase.from("gallery_images").select("*").order("sort_order");
-  if (!incluirInactivas) consulta = consulta.eq("is_active", true);
+  const { data, error } = await supabase
+    .from("before_after")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`No se pudo leer el trabajo: ${error.message}`);
+  return data;
+});
+
+const SELECT_EVENTO = "*, images:event_images(*)";
+
+function ordenarFotos(evento: Evento): Evento {
+  return {
+    ...evento,
+    images: [...(evento.images ?? [])].sort((a, b) => a.sort_order - b.sort_order),
+  };
+}
+
+export const getEventos = cache(async (incluirInactivos = false): Promise<Evento[]> => {
+  if (modoDemo()) return EVENTOS_DEMO;
+
+  const supabase = await createClient();
+  let consulta = supabase
+    .from("events")
+    .select(SELECT_EVENTO)
+    .order("sort_order")
+    .order("event_date", { ascending: false, nullsFirst: false });
+  if (!incluirInactivos) consulta = consulta.eq("is_active", true);
 
   const { data, error } = await consulta;
-  if (error) throw new Error(`No se pudo leer la galería: ${error.message}`);
-  return data ?? [];
+  if (error) throw new Error(`No se pudieron leer los eventos: ${error.message}`);
+  return ((data as Evento[] | null) ?? []).map(ordenarFotos);
+});
+
+export const getEvento = cache(async (slug: string): Promise<Evento | null> => {
+  if (modoDemo()) return EVENTOS_DEMO.find((e) => e.slug === slug) ?? null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select(SELECT_EVENTO)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) throw new Error(`No se pudo leer el evento: ${error.message}`);
+  return data ? ordenarFotos(data as Evento) : null;
+});
+
+export const getEventoPorId = cache(async (id: string): Promise<Evento | null> => {
+  if (modoDemo()) return EVENTOS_DEMO.find((e) => e.id === id) ?? null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select(SELECT_EVENTO)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`No se pudo leer el evento: ${error.message}`);
+  return data ? ordenarFotos(data as Evento) : null;
 });

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
+import { comprimirImagen } from "@/lib/imagenes";
 import { createClient } from "@/lib/supabase/client";
 import { cn, slugify } from "@/lib/utils";
 
@@ -15,18 +16,27 @@ async function subirArchivo(archivo: File, carpeta: string) {
   if (!TIPOS.includes(archivo.type)) {
     throw new Error("Solo se pueden subir imágenes JPG, PNG, WEBP o AVIF.");
   }
-  if (archivo.size > MAXIMO) {
+
+  // Las fotos de celular se achican antes de subir. Los PNG quedan como están
+  // para no perder la transparencia de los logos.
+  const { archivo: final, tipo } =
+    archivo.type === "image/png"
+      ? { archivo, tipo: archivo.type }
+      : await comprimirImagen(archivo);
+
+  if (final.size > MAXIMO) {
     throw new Error("La imagen pesa más de 6 MB. Probá con una más chica.");
   }
 
   const supabase = createClient();
-  const extension = archivo.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const extension =
+    tipo === "image/jpeg" ? "jpg" : (archivo.name.split(".").pop()?.toLowerCase() ?? "jpg");
   const base = slugify(archivo.name.replace(/\.[^.]+$/, "")) || "foto";
   const ruta = `${carpeta}/${Date.now()}-${base}.${extension}`;
 
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(ruta, archivo, { contentType: archivo.type, upsert: false });
+    .upload(ruta, final, { contentType: tipo, upsert: false });
 
   if (error) {
     throw new Error(
@@ -232,7 +242,7 @@ export function GestorImagenes({
           {subiendo ? "Subiendo..." : "Agregar fotos"}
         </span>
         <span className="text-xs text-piedra-oscura">
-          La primera es la que se ve en la tienda. JPG, PNG o WEBP, hasta 6 MB.
+          La primera es la que se ve en la página. Las fotos grandes se achican solas.
         </span>
         <input
           type="file"

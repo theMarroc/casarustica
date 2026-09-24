@@ -11,7 +11,7 @@ export function GaleriaProducto({
   imagenes,
   nombre,
 }: {
-  imagenes: ProductImage[];
+  imagenes: Pick<ProductImage, "id" | "url" | "alt">[];
   nombre: string;
 }) {
   const [activa, setActiva] = useState(0);

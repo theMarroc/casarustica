@@ -217,20 +217,55 @@ create table if not exists public.faqs (
   is_active boolean not null default true
 );
 
-create table if not exists public.gallery_images (
-  id uuid primary key default gen_random_uuid(),
-  url text not null,
-  caption text,
-  sort_order integer not null default 0,
-  is_active boolean not null default true,
-  created_at timestamptz not null default now()
-);
-
 create table if not exists public.newsletter_subscribers (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
   created_at timestamptz not null default now()
 );
+
+-- ---------------------------------------------------------------------------
+-- Trabajos: antes y después, y eventos
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.before_after (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  description text,
+  before_url text not null,
+  after_url text not null,
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.events (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  title text not null,
+  kind text,
+  event_date date,
+  place text,
+  description text,
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.event_images (
+  id uuid primary key default gen_random_uuid(),
+  event_id uuid not null references public.events on delete cascade,
+  url text not null,
+  alt text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists event_images_event_idx on public.event_images (event_id);
+
+-- El carrusel de fotos se reemplazó por Antes y después y Eventos.
+drop table if exists public.gallery_images;
 
 -- ---------------------------------------------------------------------------
 -- Direcciones de entrega
@@ -321,7 +356,7 @@ declare
   t text;
 begin
   for t in
-    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings'])
+    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events'])
   loop
     execute format('drop trigger if exists set_updated_at_%1$s on public.%1$s', t);
     execute format(
@@ -371,7 +406,9 @@ alter table public.settings enable row level security;
 alter table public.sections enable row level security;
 alter table public.benefits enable row level security;
 alter table public.faqs enable row level security;
-alter table public.gallery_images enable row level security;
+alter table public.before_after enable row level security;
+alter table public.events enable row level security;
+alter table public.event_images enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
@@ -466,12 +503,34 @@ drop policy if exists "faqs administrables" on public.faqs;
 create policy "faqs administrables" on public.faqs
   for all using (public.is_admin()) with check (public.is_admin());
 
-drop policy if exists "galeria visible" on public.gallery_images;
-create policy "galeria visible" on public.gallery_images
+drop policy if exists "antes y despues visibles" on public.before_after;
+create policy "antes y despues visibles" on public.before_after
   for select using (is_active or public.is_admin());
 
-drop policy if exists "galeria administrable" on public.gallery_images;
-create policy "galeria administrable" on public.gallery_images
+drop policy if exists "antes y despues administrables" on public.before_after;
+create policy "antes y despues administrables" on public.before_after
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "eventos visibles" on public.events;
+create policy "eventos visibles" on public.events
+  for select using (is_active or public.is_admin());
+
+drop policy if exists "eventos administrables" on public.events;
+create policy "eventos administrables" on public.events
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- Las fotos de un evento oculto tampoco se ven.
+drop policy if exists "fotos de eventos visibles" on public.event_images;
+create policy "fotos de eventos visibles" on public.event_images
+  for select using (
+    exists (
+      select 1 from public.events e
+      where e.id = event_images.event_id and (e.is_active or public.is_admin())
+    )
+  );
+
+drop policy if exists "fotos de eventos administrables" on public.event_images;
+create policy "fotos de eventos administrables" on public.event_images
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- --- Newsletter ------------------------------------------------------------
@@ -556,6 +615,8 @@ create policy "comprobantes solo admin" on storage.objects
 -- ===========================================================================
 
 -- Secciones de la portada que se pueden prender y apagar desde el panel
+delete from public.sections where key = 'carrusel';
+
 insert into public.sections (key, label, description, sort_order) values
   ('hero',             'Portada principal',      'Imagen grande, título y botón de la primera pantalla.', 1),
   ('barra_beneficios', 'Barra de beneficios',    'La tira con Hecho a mano, Showroom, etc.',              2),
@@ -563,11 +624,12 @@ insert into public.sections (key, label, description, sort_order) values
   ('destacados',       'Productos destacados',   'Los productos marcados como destacados.',               4),
   ('ofertas',          'Ofertas vigentes',       'Productos con descuento activo.',                       5),
   ('combos',           'Sets y kits',            'Los sets y kits armados desde el panel.',               6),
-  ('carrusel',         'Carrusel de fotos',      'Galería de fotos que se desliza sola.',                 7),
-  ('frase',            'Franja con la frase',    'La franja con la frase de la marca.',                   8),
-  ('mapa_delivery',    'Zona de entrega',        'Texto y mapa de la zona donde se entrega.',             9),
-  ('faq',              'Preguntas frecuentes',   'El acordeón de preguntas y respuestas.',               10),
-  ('newsletter',       'Newsletter',             'El formulario para dejar el mail.',                    11)
+  ('antes_despues',    'Antes y después',        'Los trabajos de restauración, con el comparador.',      7),
+  ('eventos',          'Eventos y bodas',        'Los últimos eventos ambientados.',                      8),
+  ('frase',            'Franja con la frase',    'La franja con la frase de la marca.',                   9),
+  ('mapa_delivery',    'Zona de entrega',        'Texto y mapa de la zona donde se entrega.',            10),
+  ('faq',              'Preguntas frecuentes',   'El acordeón de preguntas y respuestas.',               11),
+  ('newsletter',       'Newsletter',             'El formulario para dejar el mail.',                    12)
 on conflict (key) do nothing;
 
 insert into public.benefits (icon, title, subtitle, sort_order) values

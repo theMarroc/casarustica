@@ -56,6 +56,16 @@ export function formatFecha(iso: string) {
   });
 }
 
+/** "2026-03-15" → "15 de marzo de 2026". Las fechas sin hora se leen en UTC. */
+export function formatFechaDia(iso: string) {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-AR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
 /** Redondeo comercial para los aumentos de precio. */
 export function redondear(valor: number, a: "1" | "10" | "50" | "100" | "500") {
   const paso = Number(a);

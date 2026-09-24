@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 import {
-  agregarFotoGaleria,
   alternarFaq,
   borrarBeneficio,
   borrarFaq,
-  borrarFotoGaleria,
   guardarAjustes,
   guardarBeneficio,
   guardarFaq,
@@ -15,7 +12,7 @@ import {
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
 import { Interruptor } from "@/components/admin/interruptor";
-import { PanelAdmin, SinDatos, TituloAdmin } from "@/components/admin/piezas";
+import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { SubidorImagen } from "@/components/admin/subidor";
 import {
   AreaTexto,
@@ -24,7 +21,7 @@ import {
   Selector,
 } from "@/components/ui/campos";
 import { IconoBeneficio, NOMBRES_ICONO } from "@/components/ui/marca";
-import { getAjustes, getBeneficios, getFaqs, getGaleria } from "@/lib/db";
+import { getAjustes, getBeneficios, getFaqs } from "@/lib/db";
 import { ajuste, ajusteCrudo } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -33,11 +30,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ContenidoAdmin() {
-  const [ajustes, beneficios, preguntas, galeria] = await Promise.all([
+  const [ajustes, beneficios, preguntas] = await Promise.all([
     getAjustes(),
     getBeneficios(true),
     getFaqs(true),
-    getGaleria(true),
   ]);
 
   return (
@@ -130,7 +126,9 @@ export default async function ContenidoAdmin() {
                   ["Destacados", "destacados_titulo", "destacados_titulo_cursiva"],
                   ["Ofertas", "ofertas_titulo", "ofertas_titulo_cursiva"],
                   ["Sets y kits", "combos_titulo", "combos_titulo_cursiva"],
-                  ["Carrusel", "carrusel_titulo", "carrusel_titulo_cursiva"],
+                  ["Antes y después", "antes_despues_titulo", "antes_despues_titulo_cursiva"],
+                  ["Eventos", "eventos_titulo", "eventos_titulo_cursiva"],
+                  ["Página Trabajos", "trabajos_titulo", "trabajos_titulo_cursiva"],
                   ["Preguntas frecuentes", "faq_titulo", "faq_titulo_cursiva"],
                 ] as const
               ).map(([etiqueta, clave, claveCursiva]) => (
@@ -158,6 +156,36 @@ export default async function ContenidoAdmin() {
                   name="ajuste_categorias_texto"
                   rows={2}
                   defaultValue={ajuste(ajustes, "categorias_texto")}
+                />
+              </CampoConEtiqueta>
+
+              <CampoConEtiqueta
+                etiqueta="Texto debajo de Antes y después"
+                className="sm:col-span-2"
+              >
+                <AreaTexto
+                  name="ajuste_antes_despues_texto"
+                  rows={2}
+                  defaultValue={ajuste(ajustes, "antes_despues_texto")}
+                />
+              </CampoConEtiqueta>
+
+              <CampoConEtiqueta etiqueta="Texto debajo de Eventos" className="sm:col-span-2">
+                <AreaTexto
+                  name="ajuste_eventos_texto"
+                  rows={2}
+                  defaultValue={ajuste(ajustes, "eventos_texto")}
+                />
+              </CampoConEtiqueta>
+
+              <CampoConEtiqueta
+                etiqueta="Texto de la página Trabajos"
+                className="sm:col-span-2"
+              >
+                <AreaTexto
+                  name="ajuste_trabajos_texto"
+                  rows={2}
+                  defaultValue={ajuste(ajustes, "trabajos_texto")}
                 />
               </CampoConEtiqueta>
 
@@ -410,72 +438,6 @@ export default async function ContenidoAdmin() {
               </CampoConEtiqueta>
             </FormularioAdmin>
           </div>
-        </PanelAdmin>
-
-        {/* --------------------------------------------------------------- */}
-        <PanelAdmin
-          titulo="Carrusel de fotos"
-          texto="Las fotos que se deslizan solas en la portada. Si no cargás ninguna, se usan las fotos de los productos."
-        >
-          {galeria.length > 0 ? (
-            <ul className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {galeria.map((foto) => (
-                <li
-                  key={foto.id}
-                  className="overflow-hidden rounded-marca border border-piedra/30"
-                >
-                  <div className="relative aspect-4/5 bg-arena/20">
-                    <Image
-                      src={foto.url}
-                      alt=""
-                      fill
-                      sizes="200px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2">
-                    <span className="min-w-0 truncate text-xs text-carbon/70">
-                      {foto.caption || "Sin texto"}
-                    </span>
-                    <FormularioConfirmado
-                      accion={borrarFotoGaleria}
-                      mensaje="¿Sacar esta foto del carrusel?"
-                    >
-                      <input type="hidden" name="id" value={foto.id} />
-                      <button
-                        type="submit"
-                        title="Borrar"
-                        className="rounded-marca p-1.5 text-piedra-oscura transition-colors hover:bg-alerta/10 hover:text-alerta"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </FormularioConfirmado>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="mb-5">
-              <SinDatos mensaje="Todavía no hay fotos en el carrusel." />
-            </div>
-          )}
-
-          <FormularioAdmin
-            accion={agregarFotoGaleria}
-            textoBoton="Agregar al carrusel"
-            tamano="sm"
-            className="flex flex-col gap-4 rounded-marca border border-dashed border-piedra/50 p-4"
-          >
-            <SubidorImagen nombre="url" carpeta="galeria" etiqueta="Foto" />
-            <CampoConEtiqueta etiqueta="Texto sobre la foto" ayuda="Opcional">
-              <Campo name="caption" placeholder="Restaurando una cómoda en el taller" />
-            </CampoConEtiqueta>
-          </FormularioAdmin>
-
-          <p className="mt-4 flex items-center gap-1.5 text-xs text-piedra-oscura">
-            <Plus className="h-3.5 w-3.5" />
-            Podés agregar todas las fotos que quieras, se van turnando solas.
-          </p>
         </PanelAdmin>
       </div>
     </>

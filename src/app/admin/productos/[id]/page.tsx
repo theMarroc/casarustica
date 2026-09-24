@@ -196,7 +196,7 @@ export default async function EditorProducto({
                 <span>
                   <span className="font-semibold text-nogal">Destacado</span>
                   <br />
-                  Aparece en la sección &ldquo;Los más pedidos&rdquo; de la portada.
+                  Aparece en la sección &ldquo;Lo más elegido&rdquo; de la portada.
                 </span>
               </label>
 
