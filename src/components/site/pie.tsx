@@ -8,7 +8,7 @@ import {
   Logo,
   Ornamento,
 } from "@/components/ui/marca";
-import { ajuste, ajusteCrudo, linkWhatsapp } from "@/lib/settings";
+import { ajuste, ajusteCrudo, ajusteQuitable, linkWhatsapp } from "@/lib/settings";
 import type { Category, Settings } from "@/lib/types";
 
 export function Pie({
@@ -19,7 +19,7 @@ export function Pie({
   categorias: Category[];
 }) {
   const nombre = ajuste(ajustes, "marca_nombre");
-  const instagram = ajuste(ajustes, "instagram_url");
+  const instagram = ajusteQuitable(ajustes, "instagram_url");
   const facebook = ajusteCrudo(ajustes, "facebook_url");
   const email = ajusteCrudo(ajustes, "email_contacto");
   const whatsapp = ajuste(ajustes, "whatsapp_numero");

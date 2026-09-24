@@ -7,7 +7,7 @@ import { FormularioContacto } from "@/components/site/formulario-contacto";
 import { estilosBoton } from "@/components/ui/boton";
 import { IconoFacebook, IconoInstagram, IconoWhatsapp } from "@/components/ui/marca";
 import { getAjustes, getFaqs, getSeccionesActivas } from "@/lib/db";
-import { ajuste, ajusteCrudo, linkWhatsapp } from "@/lib/settings";
+import { ajuste, ajusteCrudo, ajusteQuitable, linkWhatsapp } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -22,7 +22,7 @@ export default async function PaginaContacto() {
 
   const whatsapp = ajuste(ajustes, "whatsapp_numero");
   const email = ajusteCrudo(ajustes, "email_contacto");
-  const instagram = ajusteCrudo(ajustes, "instagram_url");
+  const instagram = ajusteQuitable(ajustes, "instagram_url");
   const facebook = ajusteCrudo(ajustes, "facebook_url");
 
   return (
@@ -48,7 +48,7 @@ export default async function PaginaContacto() {
                 <IconoWhatsapp className="mt-0.5 h-5 w-5 shrink-0 text-salvia" />
                 <span>
                   <span className="block font-semibold text-nogal">WhatsApp</span>
-                  Te contestamos en el día
+                  La forma más rápida de consultarnos
                 </span>
               </a>
             </li>
@@ -80,7 +80,7 @@ export default async function PaginaContacto() {
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-acento-fuerte" strokeWidth={1.4} />
               <span>
                 <span className="block font-semibold text-nogal">Pedidos</span>
-                Los tomamos todos los días por la web o por WhatsApp
+                Por la web o por WhatsApp
               </span>
             </li>
           </ul>

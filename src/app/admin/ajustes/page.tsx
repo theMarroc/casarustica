@@ -10,7 +10,7 @@ import { AreaTexto, Campo, CampoConEtiqueta } from "@/components/ui/campos";
 import { Logo } from "@/components/ui/marca";
 import { estiloValido, letraValida } from "@/lib/apariencia";
 import { getAjustes } from "@/lib/db";
-import { ajuste, ajusteCrudo, esVerdadero } from "@/lib/settings";
+import { ajuste, ajusteCrudo, ajusteQuitable, esVerdadero } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Ajustes",
@@ -136,11 +136,14 @@ export default async function AjustesAdmin() {
                 />
               </CampoConEtiqueta>
 
-              <CampoConEtiqueta etiqueta="Link de Instagram">
+              <CampoConEtiqueta
+                etiqueta="Link de Instagram"
+                ayuda="Si lo borrás, el ícono deja de aparecer"
+              >
                 <Campo
                   name="ajuste_instagram_url"
                   type="url"
-                  defaultValue={ajusteCrudo(ajustes, "instagram_url")}
+                  defaultValue={ajusteQuitable(ajustes, "instagram_url")}
                   placeholder="https://www.instagram.com/casarustica.deco"
                 />
               </CampoConEtiqueta>

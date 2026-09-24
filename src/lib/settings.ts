@@ -101,6 +101,14 @@ export function ajuste(ajustes: Settings, clave: ClaveAjuste) {
   return valor;
 }
 
+/**
+ * Como `ajuste`, pero si se guardó vacío queda vacío: sirve para lo que se
+ * puede sacar del sitio (por ejemplo, el link de Instagram).
+ */
+export function ajusteQuitable(ajustes: Settings, clave: ClaveAjuste) {
+  return clave in ajustes ? ajustes[clave] : AJUSTES_POR_DEFECTO[clave];
+}
+
 /** Igual que `ajuste` pero devuelve "" si no hay valor guardado (sin default). */
 export function ajusteCrudo(ajustes: Settings, clave: ClaveAjuste) {
   return ajustes[clave] ?? "";

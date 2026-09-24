@@ -79,9 +79,13 @@ export function CampoConEtiqueta({
 }) {
   return (
     <div className={cn("flex flex-col", className)}>
-      <Etiqueta requerido={requerido} ayuda={ayuda}>
-        {etiqueta}
-      </Etiqueta>
+      {/* La etiqueta crece para que, en una grilla, los campos de una misma
+          fila queden a la misma altura aunque solo algunos tengan ayuda. */}
+      <div className="flex flex-1 flex-col">
+        <Etiqueta requerido={requerido} ayuda={ayuda}>
+          {etiqueta}
+        </Etiqueta>
+      </div>
       {children}
     </div>
   );

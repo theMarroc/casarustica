@@ -4,7 +4,7 @@ import { useActionState } from "react";
 
 import { suscribirNewsletter, type EstadoFormulario } from "@/actions/publico";
 import { IconoFacebook, IconoInstagram, Isotipo } from "@/components/ui/marca";
-import { ajuste, ajusteCrudo } from "@/lib/settings";
+import { ajuste, ajusteCrudo, ajusteQuitable } from "@/lib/settings";
 import type { Settings } from "@/lib/types";
 
 export function Newsletter({ ajustes }: { ajustes: Settings }) {
@@ -13,7 +13,7 @@ export function Newsletter({ ajustes }: { ajustes: Settings }) {
     null,
   );
 
-  const instagram = ajusteCrudo(ajustes, "instagram_url");
+  const instagram = ajusteQuitable(ajustes, "instagram_url");
   const facebook = ajusteCrudo(ajustes, "facebook_url");
 
   return (
