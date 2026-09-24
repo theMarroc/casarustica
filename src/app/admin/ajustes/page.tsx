@@ -4,9 +4,11 @@ import { AlertTriangle } from "lucide-react";
 import { guardarAjustes } from "@/actions/admin/contenido";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
+import { SelectorApariencia } from "@/components/admin/selector-apariencia";
 import { SubidorImagen } from "@/components/admin/subidor";
 import { AreaTexto, Campo, CampoConEtiqueta } from "@/components/ui/campos";
 import { Logo } from "@/components/ui/marca";
+import { estiloValido, letraValida } from "@/lib/apariencia";
 import { getAjustes } from "@/lib/db";
 import { ajuste, ajusteCrudo, esVerdadero } from "@/lib/settings";
 
@@ -23,10 +25,25 @@ export default async function AjustesAdmin() {
     <>
       <TituloAdmin
         titulo="Ajustes"
-        texto="Los logos, los datos de contacto, cómo cobrás y cómo entregás."
+        texto="La apariencia, los logos, los datos de contacto, cómo cobrás y cómo entregás."
       />
 
       <div className="flex flex-col gap-6">
+        {/* ------------------------------------------------------------- */}
+        <PanelAdmin
+          titulo="Apariencia"
+          texto="La letra y los colores de todo el sitio. Elegí una opción, mirá la muestra y guardá para aplicarla."
+        >
+          <FormularioAdmin accion={guardarAjustes} textoBoton="Aplicar al sitio">
+            <SelectorApariencia
+              letra={letraValida(ajustes.apariencia_letra)}
+              estilo={estiloValido(ajustes.apariencia_estilo)}
+              nombre={ajuste(ajustes, "marca_nombre")}
+              bajada={ajuste(ajustes, "marca_bajada")}
+            />
+          </FormularioAdmin>
+        </PanelAdmin>
+
         {/* ------------------------------------------------------------- */}
         <PanelAdmin
           titulo="Logos"

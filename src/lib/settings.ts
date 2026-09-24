@@ -14,6 +14,9 @@ export const AJUSTES_POR_DEFECTO = {
   // Si no hay logo subido, se muestra el nombre con la tipografía de la marca.
   logo_url: "",
   logo_taller_url: "",
+  // Ver src/lib/apariencia.ts
+  apariencia_letra: "a",
+  apariencia_estilo: "rustica",
 
   // --- Portada -----------------------------------------------------------
   hero_titulo: "Diseño con alma,",

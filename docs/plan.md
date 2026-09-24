@@ -12,8 +12,8 @@ update o delete).
 
 | Fase | Qué incluye | Estado |
 |---|---|---|
-| 0. Arranque | Copia de Nahilén, repo propio, textos fijos de Nahilén afuera, esquema con datos iniciales de Casa Rústica, conexión a Supabase | Hecha, falta conectar Supabase |
-| 1. Identidad | Paleta con acento intercambiable (celeste / tiffany en `.marca-taller`), tipografías, logos desde Ajustes, textos por defecto, datos de ejemplo, primer deploy | Hecha, falta elegir tipografías |
+| 0. Arranque | Copia de Nahilén, repo propio, textos fijos de Nahilén afuera, esquema con datos iniciales de Casa Rústica, conexión a Supabase | Hecha, falta la clave secreta |
+| 1. Identidad | Paleta con acento intercambiable (celeste / tiffany en `.marca-taller`), tipografías y estilo elegibles desde Ajustes › Apariencia, logos desde Ajustes, textos por defecto, datos de ejemplo, primer deploy | Hecha |
 | 2. Antes y después, eventos y portada | Comparador deslizable, portfolio de eventos, secciones nuevas de portada, sacar el carrusel | Pendiente |
 | 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña; efectivo al retirar; estados nuevos del pedido | Pendiente (depende de las respuestas de Silvina) |
 | 4. Servicios con presupuesto | Formulario con fotos (URL firmada), solicitudes con estados en el panel | Pendiente (depende de las respuestas) |
@@ -27,6 +27,7 @@ update o delete).
 - Los productos no se precargan en la base: los carga Silvina. Las categorías sí.
 - Errores y botones de borrar usan su propio color (`alerta`), no el acento.
 - Las fotos de clientes se suben con URL firmada directo a Storage.
+- Repo público en GitHub (theMarroc/casarustica). Funciones de Vercel en São Paulo (`gru1`), igual que la base.
 
 ## Preguntas abiertas para Silvina
 
@@ -38,7 +39,6 @@ update o delete).
 
 ## Decisiones abiertas
 
-- Tipografías: opciones A, B y C en `/tipografias` (página temporal).
-- Repo de GitHub: público o privado.
+- Tipografía y estilo de color: se eligen y se cambian desde Ajustes › Apariencia (Clásica, Cálida o Sobria; Casa Rústica o Azul Tiffany).
 - Aviso de solicitudes nuevas: botón de WhatsApp para el cliente y contador en el panel (recomendado).
 - Lugar sin pagar en talleres: se libera a las 48 h (recomendado).

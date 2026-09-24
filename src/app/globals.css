@@ -2,8 +2,10 @@
 
 /* ---------------------------------------------------------------------------
    Casa Rústica: sistema de diseño
-   El acento (celeste) cambia a tiffany dentro de .marca-taller, la sección del
-   taller Azul Tiffany. Los componentes usan siempre los tokens "acento".
+   La tipografía (data-letra) y el estilo de color (data-estilo) se eligen en
+   Ajustes › Apariencia. Además, el acento cambia a tiffany dentro de
+   .marca-taller, la sección del taller. Los componentes usan siempre los
+   tokens "acento".
    --------------------------------------------------------------------------- */
 @theme {
   --color-hueso: #faf7f2;
@@ -33,9 +35,9 @@
   --color-acento-fuerte: var(--color-celeste-fuerte);
   --color-acento-profundo: var(--color-celeste-profundo);
 
-  --font-display: var(--font-titulos), Georgia, serif;
-  --font-sans: var(--font-texto), ui-sans-serif, system-ui, sans-serif;
-  --font-script: var(--font-manuscrita), cursive;
+  --font-display: var(--f-cormorant), Georgia, serif;
+  --font-sans: var(--f-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--f-allura), cursive;
 
   --radius-marca: 0.25rem;
   --shadow-suave: 0 1px 2px rgb(51 48 44 / 0.04), 0 8px 24px -12px rgb(51 48 44 / 0.12);
@@ -43,6 +45,47 @@
 }
 
 .marca-taller {
+  --color-acento: var(--color-tiffany);
+  --color-acento-hover: var(--color-tiffany-hover);
+  --color-acento-fuerte: var(--color-tiffany-fuerte);
+  --color-acento-profundo: var(--color-tiffany-profundo);
+}
+
+/* Se redefinen las familias en el mismo elemento (y no solo las fuentes
+   sueltas) para que la muestra del panel también cambie. */
+[data-letra] {
+  font-family: var(--font-sans);
+}
+
+[data-letra="a"] {
+  --font-display: var(--f-cormorant), Georgia, serif;
+  --font-sans: var(--f-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--f-allura), cursive;
+  --peso-titulos: 500;
+}
+
+[data-letra="b"] {
+  --font-display: var(--f-fraunces), Georgia, serif;
+  --font-sans: var(--f-mulish), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--f-parisienne), cursive;
+  --peso-titulos: 400;
+}
+
+[data-letra="c"] {
+  --font-display: var(--f-lora), Georgia, serif;
+  --font-sans: var(--f-worksans), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--f-greatvibes), cursive;
+  --peso-titulos: 500;
+}
+
+[data-estilo="tiffany"] {
+  --color-hueso: #f7fbfa;
+  --color-lino: #e4f0ee;
+  --color-arena: #a8cbc6;
+  --color-madera: #5c928b;
+  --color-nogal: #26403d;
+  --color-piedra: #93a3a1;
+  --color-piedra-oscura: #5a6a68;
   --color-acento: var(--color-tiffany);
   --color-acento-hover: var(--color-tiffany-hover);
   --color-acento-fuerte: var(--color-tiffany-fuerte);
@@ -66,11 +109,11 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: var(--peso-titulos, 500);
     letter-spacing: -0.005em;
   }
 
-  /* Cormorant trae números antiguos por defecto: en precios se leen mal. */
+  /* Cormorant y Fraunces traen números antiguos: en precios se leen mal. */
   h1,
   h2,
   h3,
@@ -117,6 +160,8 @@
   font-size: 1.3em;
   line-height: 0.9;
   letter-spacing: 0;
+  /* Algunas manuscritas arrancan con un trazo que se mete sobre la palabra anterior. */
+  margin-inline-start: 0.08em;
   color: var(--color-acento-fuerte);
 }
 

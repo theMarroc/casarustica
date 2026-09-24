@@ -157,7 +157,11 @@ export default async function Tienda({
           vacio={
             q
               ? "No encontramos nada con esa búsqueda. ¿Probás con otra palabra?"
-              : "Todavía no hay productos en esta categoría."
+              : oferta === "1"
+                ? "Por ahora no hay productos en oferta."
+                : categoria
+                  ? "Todavía no hay productos en esta categoría."
+                  : "Estamos cargando los productos. Mientras tanto, escribinos por WhatsApp."
           }
         />
       </div>

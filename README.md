@@ -23,7 +23,7 @@ una dirección `algo.vercel.app`.
 | **Aumentar precios** | Subir (o bajar) todos los precios un porcentaje, con vista previa, redondeo y opción de deshacer. |
 | **Secciones** | Prender y apagar cada bloque de la portada (carrusel, FAQ, mapa de delivery, etc.) y reordenarlos. |
 | **Textos y fotos** | Editar todos los textos del sitio, la foto de portada, la barra de beneficios, las preguntas frecuentes y el carrusel. |
-| **Ajustes** | Logos, WhatsApp, redes, datos bancarios, costos de envío, zona de entrega y métodos de pago. |
+| **Ajustes** | Tipografía y colores del sitio, logos, WhatsApp, redes, datos bancarios, costos de envío, zona de entrega y métodos de pago. |
 
 Los clientes pueden comprar **sin cuenta**. Si se registran, se les guardan las
 direcciones de entrega y el historial de pedidos.
