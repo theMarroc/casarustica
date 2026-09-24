@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Casa Rústica: sistema de diseño
+   El acento (celeste) cambia a tiffany dentro de .marca-taller, la sección del
+   taller Azul Tiffany. Los componentes usan siempre los tokens "acento".
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-hueso: #faf7f2;
+  --color-lino: #efe6da;
+  --color-arena: #bfa98f;
+  --color-madera: #a67c52;
+  --color-nogal: #5a4636;
+  --color-piedra: #9c968e;
+  --color-piedra-oscura: #6b665f;
+  --color-carbon: #33302c;
+  --color-salvia: #5e7a5a;
+  --color-alerta: #a4483a;
+  --color-alerta-oscura: #7f3429;
+
+  --color-celeste: #8fb2d6;
+  --color-celeste-hover: #7ba3cc;
+  --color-celeste-fuerte: #46698c;
+  --color-celeste-profundo: #37546f;
+  --color-tiffany: #81d8d0;
+  --color-tiffany-hover: #6ccbc2;
+  --color-tiffany-fuerte: #2b7a74;
+  --color-tiffany-profundo: #1f5d58;
+
+  /* Claros: fondos con texto oscuro. Fuertes: texto, links y botones con texto blanco. */
+  --color-acento: var(--color-celeste);
+  --color-acento-hover: var(--color-celeste-hover);
+  --color-acento-fuerte: var(--color-celeste-fuerte);
+  --color-acento-profundo: var(--color-celeste-profundo);
+
+  --font-display: var(--font-titulos), Georgia, serif;
+  --font-sans: var(--font-texto), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-manuscrita), cursive;
+
+  --radius-marca: 0.25rem;
+  --shadow-suave: 0 1px 2px rgb(51 48 44 / 0.04), 0 8px 24px -12px rgb(51 48 44 / 0.12);
+  --shadow-tarjeta: 0 2px 4px rgb(51 48 44 / 0.05), 0 12px 32px -16px rgb(51 48 44 / 0.18);
+}
+
+.marca-taller {
+  --color-acento: var(--color-tiffany);
+  --color-acento-hover: var(--color-tiffany-hover);
+  --color-acento-fuerte: var(--color-tiffany-fuerte);
+  --color-acento-profundo: var(--color-tiffany-profundo);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-hueso);
+    color: var(--color-carbon);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+
+  /* Cormorant trae números antiguos por defecto: en precios se leen mal. */
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-display {
+    font-variant-numeric: lining-nums;
+  }
+
+  ::selection {
+    background-color: var(--color-acento);
+    color: var(--color-carbon);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-acento-fuerte);
+    outline-offset: 2px;
+  }
+}
+
+@utility contenedor {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 78rem;
+  padding-inline: 1rem;
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 2.5rem;
+  }
+}
+
+@utility titulo-seccion {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 1.3rem + 2.2vw, 3rem);
+  line-height: 1.1;
+}
+
+/* La palabra de acento de los títulos, en letra manuscrita. */
+@utility cursiva-marca {
+  font-family: var(--font-script);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.3em;
+  line-height: 0.9;
+  letter-spacing: 0;
+  color: var(--color-acento-fuerte);
+}
+
+@utility linea-decorativa {
+  display: block;
+  width: 3.5rem;
+  height: 2px;
+  background-color: var(--color-madera);
+}
+
+/* Oculta el scrollbar en carruseles horizontales */
+@utility sin-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility aparecer {
+  animation: aparecer 0.5s ease-out both;
+}
+
+@keyframes deslizar {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Carrusel continuo de fotos (se duplica la lista para que el loop no corte) */
+@utility marquesina {
+  animation: deslizar 45s linear infinite;
+  width: max-content;
+}
