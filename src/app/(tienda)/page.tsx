@@ -11,6 +11,7 @@ import { Portada } from "@/components/home/portada";
 import { SeccionPreguntas } from "@/components/home/preguntas";
 import { GrillaProductos, TarjetaCombo } from "@/components/shop/tarjeta-producto";
 import { TarjetaServicio } from "@/components/servicios/tarjeta-servicio";
+import { TarjetaFecha, TarjetaTaller } from "@/components/taller/tarjetas";
 import { TarjetaAntesDespues, TarjetaEvento } from "@/components/trabajos/tarjetas";
 import { AvisoDemo } from "@/components/site/aviso-demo";
 import { estilosBoton } from "@/components/ui/boton";
@@ -26,10 +27,12 @@ import {
   getProductos,
   getSecciones,
   getServicios,
+  getTalleres,
   getZonasEnvio,
   modoDemo,
 } from "@/lib/db";
 import { calcularPrecio } from "@/lib/pricing";
+import { proximasFechas } from "@/lib/talleres";
 import { ajuste } from "@/lib/settings";
 
 export default async function Inicio() {
@@ -47,6 +50,7 @@ export default async function Inicio() {
     eventos,
     zonas,
     servicios,
+    talleres,
   ] = await Promise.all([
     getAjustes(),
     getSecciones(),
@@ -61,9 +65,11 @@ export default async function Inicio() {
     getEventos(),
     getZonasEnvio(),
     getServicios(),
+    getTalleres(),
   ]);
 
   const enOferta = todos.filter((p) => calcularPrecio(p, ofertas).oferta !== null);
+  const fechasTaller = proximasFechas(talleres, 3);
 
   const bloques: Record<string, ReactNode> = {
     hero: <Portada ajustes={ajustes} />,
@@ -166,6 +172,36 @@ export default async function Inicio() {
                 <TarjetaAntesDespues key={trabajo.id} trabajo={trabajo} />
               ))}
             </div>
+          </div>
+        </section>
+      ) : null,
+    talleres:
+      talleres.length > 0 ? (
+        <section className="marca-taller bg-acento/10 py-16 lg:py-24">
+          <div className="contenedor">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <EncabezadoSeccion
+                titulo={ajuste(ajustes, "talleres_titulo")}
+                tituloCursiva={ajuste(ajustes, "talleres_titulo_cursiva")}
+                texto={ajuste(ajustes, "talleres_texto")}
+              />
+              <Link href="/taller" className={estilosBoton("secundario", "md")}>
+                Ver el taller
+              </Link>
+            </div>
+            {fechasTaller.length > 0 ? (
+              <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {fechasTaller.map(({ taller, fecha }) => (
+                  <TarjetaFecha key={fecha.id} taller={taller} fecha={fecha} />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {talleres.slice(0, 3).map((taller) => (
+                  <TarjetaTaller key={taller.id} taller={taller} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       ) : null,

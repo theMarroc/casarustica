@@ -17,7 +17,7 @@ update o delete).
 | 2. Antes y después, eventos y portada | Comparador deslizable, portfolio de eventos (página `/trabajos`), secciones nuevas de portada, sacar el carrusel | Hecha |
 | 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña opcional; efectivo al retirar; zonas de envío; estados nuevos del pedido | Hecha |
 | 4. Servicios con presupuesto | Restauración, ambientación y asesoría: formulario con fotos (URL firmada), solicitudes con estados en el panel | Hecha |
-| 5. Taller Azul Tiffany | `/taller`, talleres y profesorado con fechas, cupo, duración y contenido; inscripción y seña por la web; lista de espera | Pendiente |
+| 5. Taller Azul Tiffany | `/taller`, talleres y profesorado con fechas, cupo, duración y contenido; inscripción y seña por la web; lista de espera | Hecha |
 | 6. Publicación | Variables en Vercel, Auth y webhook, prueba completa, cron para que Supabase no se pause, manual del panel | Pendiente |
 
 ## Decisiones tomadas
@@ -34,6 +34,12 @@ update o delete).
 - Servicios: cada uno tiene su página (`/servicios/<slug>`) con formulario de presupuesto. Desde el panel se elige qué pide (fotos, medidas, fecha del evento) y qué trabajos muestra (antes y después o eventos). La dirección se arma al crearlo y no cambia al editarlo.
 - Presupuestos (`/admin/solicitudes`): estados Nueva, Presupuestada, Aceptada, Terminada y Descartada; monto y notas internas; las fotos quedan en el bucket privado `solicitudes` y se ven con enlaces firmados de una hora. El menú del panel y el Resumen cuentan los nuevos.
 - Los números de WhatsApp se normalizan a 549 + característica + número, sin 0 ni 15, escriba como escriba el cliente.
+- Taller Azul Tiffany (`/taller`, acento tiffany con `.marca-taller` y la mariposa como logo mientras no se suba uno): talleres de dos tipos (taller o clase, y profesorado), cada uno con fechas que tienen cupo, precio, aclaración del precio y seña opcional.
+- Una inscripción es un pedido más (`orders.kind = 'inscripcion'`, código `TA-`, línea `workshop` con `session_id`): reutiliza Mercado Pago, transferencia con comprobante, la página del pedido y el panel de Pedidos. Solo Mercado Pago o transferencia; si es sin costo queda confirmada.
+- El cupo lo cuenta la función `lugares_tomados()` de la base: suma las inscripciones no canceladas, y una sin pagar deja de contar pasadas las horas de Ajustes › Inscripciones al taller (48 por defecto). Si dos personas se anotan a la vez por el último lugar, la segunda no entra.
+- Lista de espera por fecha llena, o "avisame cuando haya fecha" si el taller no tiene fechas. Se ve en el panel con botón de WhatsApp; el menú cuenta las personas esperando.
+- La dirección del taller es la misma de retiro (Ajustes › Envíos y retiro).
+- Los formularios del panel se envían a mano: React 19 vaciaba el formulario después de un error y se perdía lo escrito.
 
 ## Respuestas de Silvina (24/09/2026)
 

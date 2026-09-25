@@ -24,6 +24,74 @@ export function Isotipo({ className }: { className?: string }) {
   );
 }
 
+/** La mariposa del taller Azul Tiffany. */
+export function Mariposa({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={cn("h-7 w-7 text-acento-fuerte", className)}
+    >
+      <path d="M16 11.5v12" />
+      <path d="M16 11.5c-.8-2.4-2.3-4.1-4.2-5M16 11.5c.8-2.4 2.3-4.1 4.2-5" />
+      <path d="M16 14.5C12.2 7.8 4.6 7.6 5 12.4c.3 3.4 5.6 5 11 3.9" />
+      <path d="M16 14.5c3.8-6.7 11.4-6.9 11 -2.1-.3 3.4-5.6 5-11 3.9" />
+      <path d="M16 17.4c-4.6.2-8.3 3-6.8 6.3 1.4 2.9 5.2-.4 6.8-3.7" />
+      <path d="M16 17.4c4.6.2 8.3 3 6.8 6.3-1.4 2.9-5.2-.4-6.8-3.7" />
+    </svg>
+  );
+}
+
+/**
+ * Logo del taller. Si se subió uno desde Ajustes se usa esa imagen; si no,
+ * la mariposa con el nombre en letra manuscrita.
+ */
+export function LogoTaller({
+  nombre = AJUSTES_POR_DEFECTO.taller_nombre,
+  bajada = AJUSTES_POR_DEFECTO.taller_bajada,
+  logoUrl,
+  className,
+}: {
+  nombre?: string;
+  bajada?: string;
+  logoUrl?: string;
+  className?: string;
+}) {
+  if (logoUrl) {
+    return (
+      <Image
+        src={logoUrl}
+        alt={nombre}
+        width={320}
+        height={160}
+        sizes="220px"
+        className={cn("h-20 w-auto max-w-56 object-contain", className)}
+      />
+    );
+  }
+
+  return (
+    <span className={cn("inline-flex items-center gap-3", className)}>
+      <Mariposa className="h-12 w-12" />
+      <span className="flex flex-col items-start leading-none">
+        <span className="whitespace-nowrap font-script text-[2.3rem] leading-[0.9] text-nogal">
+          {nombre}
+        </span>
+        {bajada ? (
+          <span className="mt-1.5 text-[9px] font-semibold uppercase tracking-[0.4em] text-piedra-oscura">
+            {bajada}
+          </span>
+        ) : null}
+      </span>
+    </span>
+  );
+}
+
 /**
  * Logo de la marca. Si se subió uno desde el panel se usa esa imagen; si no,
  * el nombre en letra manuscrita con la bajada en versalitas.
@@ -73,12 +141,22 @@ export function Logo({
   );
 }
 
-/** Ornamento: la casita centrada entre dos líneas. */
-export function Ornamento({ className }: { className?: string }) {
+/** Ornamento: la casita (o la mariposa, en el taller) centrada entre dos líneas. */
+export function Ornamento({
+  className,
+  mariposa = false,
+}: {
+  className?: string;
+  mariposa?: boolean;
+}) {
   return (
     <span className={cn("flex items-center justify-center gap-3", className)}>
       <span className="h-px w-10 bg-arena/60" />
-      <Isotipo className="h-4 w-4 text-arena" />
+      {mariposa ? (
+        <Mariposa className="h-5 w-5 text-acento" />
+      ) : (
+        <Isotipo className="h-4 w-4 text-arena" />
+      )}
       <span className="h-px w-10 bg-arena/60" />
     </span>
   );
@@ -176,9 +254,12 @@ export function IconoBeneficio({
 export function PlaceholderImagen({
   texto,
   className,
+  mariposa = false,
 }: {
   texto: string;
   className?: string;
+  /** Con la mariposa del taller en vez de la casita. */
+  mariposa?: boolean;
 }) {
   const paletas = [
     ["var(--color-lino)", "var(--color-arena)"],
@@ -197,7 +278,11 @@ export function PlaceholderImagen({
       style={{ background: `linear-gradient(150deg, ${desde} 15%, ${hasta} 100%)` }}
       aria-hidden="true"
     >
-      <Isotipo className="h-10 w-10 text-white/80" />
+      {mariposa ? (
+        <Mariposa className="h-12 w-12 text-white/85" />
+      ) : (
+        <Isotipo className="h-10 w-10 text-white/80" />
+      )}
     </div>
   );
 }

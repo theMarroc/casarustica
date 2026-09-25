@@ -341,6 +341,60 @@ create table if not exists public.quote_request_images (
 
 create index if not exists quote_request_images_request_idx on public.quote_request_images (request_id);
 
+-- ---------------------------------------------------------------------------
+-- Taller Azul Tiffany: talleres, profesorado, sus fechas y la lista de espera
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.workshops (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  kind text not null default 'taller' check (kind in ('taller', 'profesorado')),
+  name text not null,
+  summary text,
+  description text,
+  duration text,
+  includes_materials boolean not null default false,
+  materials_note text,
+  image_url text,
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Cada fecha (o cohorte) tiene su cupo, su precio y su seña.
+create table if not exists public.workshop_sessions (
+  id uuid primary key default gen_random_uuid(),
+  workshop_id uuid not null references public.workshops on delete cascade,
+  starts_at timestamptz not null,
+  schedule text,
+  capacity integer not null default 8 check (capacity > 0),
+  price numeric(12, 2) not null default 0 check (price >= 0),
+  price_note text,
+  deposit_type text not null default 'none' check (deposit_type in ('none', 'percent', 'amount')),
+  deposit_value numeric(12, 2) not null default 0 check (deposit_value >= 0),
+  is_open boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists workshop_sessions_workshop_idx on public.workshop_sessions (workshop_id, starts_at);
+
+-- La crea el servidor (con la clave de servicio). Sin fecha es "avisame cuando haya".
+create table if not exists public.workshop_waitlist (
+  id uuid primary key default gen_random_uuid(),
+  workshop_id uuid not null references public.workshops on delete cascade,
+  session_id uuid references public.workshop_sessions on delete set null,
+  customer_name text not null,
+  customer_phone text not null,
+  customer_email text,
+  people integer not null default 1 check (people between 1 and 10),
+  status text not null default 'esperando' check (status in ('esperando', 'avisada', 'descartada')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists workshop_waitlist_workshop_idx on public.workshop_waitlist (workshop_id, status);
+
 -- El carrusel de fotos se reemplazó por Antes y después y Eventos.
 drop table if exists public.gallery_images;
 
@@ -455,6 +509,50 @@ alter table public.order_items
   add column if not exists personalization jsonb,
   add column if not exists deposit_unit numeric(12, 2) not null default 0;
 
+-- Inscripciones al taller: son pedidos con una línea por fecha de taller.
+alter table public.orders add column if not exists kind text not null default 'pedido';
+alter table public.orders drop constraint if exists orders_kind_check;
+alter table public.orders add constraint orders_kind_check check (kind in ('pedido', 'inscripcion'));
+
+alter table public.order_items
+  add column if not exists session_id uuid references public.workshop_sessions on delete set null;
+alter table public.order_items drop constraint if exists order_items_kind_check;
+alter table public.order_items add constraint order_items_kind_check
+  check (kind in ('product', 'combo', 'workshop'));
+
+create index if not exists order_items_session_idx on public.order_items (session_id)
+  where session_id is not null;
+
+-- Lugares ocupados por fecha de taller. Cuenta las inscripciones que no se
+-- cancelaron; una sin pagar guarda el lugar solo las horas que diga el ajuste
+-- taller_reserva_horas (48 si no hay otro valor).
+create or replace function public.lugares_tomados()
+returns table (session_id uuid, tomados integer)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  with reserva as (
+    select coalesce(
+      (select s.value::integer from public.settings s
+        where s.key = 'taller_reserva_horas' and s.value ~ '^[0-9]{1,4}$'),
+      48
+    ) as horas
+  )
+  select oi.session_id, sum(oi.quantity)::integer
+  from public.order_items oi
+  join public.orders o on o.id = oi.order_id
+  cross join reserva r
+  where oi.session_id is not null
+    and o.status <> 'cancelado'
+    and not (o.status = 'pendiente_pago' and o.created_at < now() - make_interval(hours => r.horas))
+  group by oi.session_id;
+$$;
+
+revoke all on function public.lugares_tomados() from public;
+grant execute on function public.lugares_tomados() to anon, authenticated, service_role;
+
 -- ---------------------------------------------------------------------------
 -- Zonas de envío (el costo null significa "a coordinar")
 -- ---------------------------------------------------------------------------
@@ -478,7 +576,7 @@ declare
   t text;
 begin
   for t in
-    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones', 'services', 'quote_requests'])
+    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones', 'services', 'quote_requests', 'workshops', 'workshop_sessions'])
   loop
     execute format('drop trigger if exists set_updated_at_%1$s on public.%1$s', t);
     execute format(
@@ -535,6 +633,9 @@ alter table public.shipping_zones enable row level security;
 alter table public.services enable row level security;
 alter table public.quote_requests enable row level security;
 alter table public.quote_request_images enable row level security;
+alter table public.workshops enable row level security;
+alter table public.workshop_sessions enable row level security;
+alter table public.workshop_waitlist enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
@@ -684,6 +785,34 @@ drop policy if exists "fotos de presupuestos solo admin" on public.quote_request
 create policy "fotos de presupuestos solo admin" on public.quote_request_images
   for all using (public.is_admin()) with check (public.is_admin());
 
+-- --- Taller ----------------------------------------------------------------
+drop policy if exists "talleres visibles" on public.workshops;
+create policy "talleres visibles" on public.workshops
+  for select using (is_active or public.is_admin());
+
+drop policy if exists "talleres administrables" on public.workshops;
+create policy "talleres administrables" on public.workshops
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- Una fecha se ve si está abierta y su taller está visible.
+drop policy if exists "fechas de taller visibles" on public.workshop_sessions;
+create policy "fechas de taller visibles" on public.workshop_sessions
+  for select using (
+    public.is_admin()
+    or (
+      is_open
+      and exists (select 1 from public.workshops w where w.id = workshop_id and w.is_active)
+    )
+  );
+
+drop policy if exists "fechas de taller administrables" on public.workshop_sessions;
+create policy "fechas de taller administrables" on public.workshop_sessions
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "lista de espera solo admin" on public.workshop_waitlist;
+create policy "lista de espera solo admin" on public.workshop_waitlist
+  for all using (public.is_admin()) with check (public.is_admin());
+
 -- --- Newsletter ------------------------------------------------------------
 drop policy if exists "cualquiera se suscribe" on public.newsletter_subscribers;
 create policy "cualquiera se suscribe" on public.newsletter_subscribers
@@ -788,11 +917,12 @@ insert into public.sections (key, label, description, sort_order) values
   ('combos',           'Sets y kits',            'Los sets y kits armados desde el panel.',               6),
   ('servicios',        'Servicios',              'Restauración, ambientación y asesoría.',                7),
   ('antes_despues',    'Antes y después',        'Los trabajos de restauración, con el comparador.',      8),
-  ('eventos',          'Eventos y bodas',        'Los últimos eventos ambientados.',                      9),
-  ('frase',            'Franja con la frase',    'La franja con la frase de la marca.',                  10),
-  ('mapa_delivery',    'Zona de entrega',        'Texto y mapa de la zona donde se entrega.',            11),
-  ('faq',              'Preguntas frecuentes',   'El acordeón de preguntas y respuestas.',               12),
-  ('newsletter',       'Newsletter',             'El formulario para dejar el mail.',                    13)
+  ('talleres',         'Talleres próximos',      'Las próximas fechas del taller Azul Tiffany.',          9),
+  ('eventos',          'Eventos y bodas',        'Los últimos eventos ambientados.',                     10),
+  ('frase',            'Franja con la frase',    'La franja con la frase de la marca.',                  11),
+  ('mapa_delivery',    'Zona de entrega',        'Texto y mapa de la zona donde se entrega.',            12),
+  ('faq',              'Preguntas frecuentes',   'El acordeón de preguntas y respuestas.',               13),
+  ('newsletter',       'Newsletter',             'El formulario para dejar el mail.',                    14)
 on conflict (key) do nothing;
 
 insert into public.benefits (icon, title, subtitle, sort_order) values
@@ -839,6 +969,18 @@ insert into public.services (slug, name, summary, description, asks_photos, asks
    'Te ayudamos a definir el estilo de tu casa: colores, iluminación y deco para cada ambiente.',
    'Te acompañamos a definir el estilo de tu casa o de un ambiente: paleta de colores, iluminación, muebles y detalles de deco.' || chr(10) || chr(10) || 'Mandanos fotos del lugar y contanos qué te gustaría lograr.',
    true, false, false, 'none', 3)
+on conflict (slug) do nothing;
+
+-- Lo que dicta hoy. Las fechas, los cupos y los precios los carga Silvina desde el panel.
+insert into public.workshops (slug, kind, name, summary, description, sort_order) values
+  ('taller-de-decoracion', 'taller', 'Taller de decoración y técnicas múltiples',
+   'Pintura a la tiza, efectos decorativos y renovación de muebles y objetos, en grupos chicos.',
+   'Un espacio para aprender técnicas de pintura y decoración: pintura a la tiza, efecto madera, zincado y mármol, stencils y transfers, y renovación de muebles y objetos.' || chr(10) || chr(10) || 'Cada encuentro trabajás sobre tu propia pieza, con acompañamiento de Silvina.',
+   1),
+  ('profesorado-arte-mix-media', 'profesorado', 'Profesorado de Arte Mix Media',
+   'Formación para enseñar técnicas de arte decorativo y mix media.',
+   'Una formación para quienes quieren enseñar o profundizar en las técnicas de arte decorativo y mix media.' || chr(10) || chr(10) || 'Consultanos por la duración y el programa.',
+   2)
 on conflict (slug) do nothing;
 
 -- Zonas sin costo cargado: se ven como "a coordinar" hasta que ella ponga el precio.

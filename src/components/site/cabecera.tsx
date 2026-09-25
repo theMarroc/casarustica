@@ -13,6 +13,7 @@ const ENLACES = [
   { href: "/tienda", texto: "Tienda" },
   { href: "/sets", texto: "Sets y kits" },
   { href: "/servicios", texto: "Servicios" },
+  { href: "/taller", texto: "Taller" },
   { href: "/trabajos", texto: "Trabajos" },
   { href: "/nosotros", texto: "Nosotros" },
   { href: "/contacto", texto: "Contacto" },
@@ -63,7 +64,7 @@ export function Cabecera({
             <Logo nombre={nombreMarca} bajada={bajadaMarca} logoUrl={logoUrl} />
           </Link>
 
-          <nav className="hidden items-center gap-8 lg:flex" aria-label="Principal">
+          <nav className="hidden items-center gap-6 lg:flex xl:gap-8" aria-label="Principal">
             {ENLACES.map((enlace) => (
               <Link
                 key={enlace.href}

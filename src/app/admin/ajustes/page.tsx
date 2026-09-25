@@ -392,6 +392,30 @@ export default async function AjustesAdmin() {
 
         {/* ------------------------------------------------------------- */}
         <PanelAdmin
+          titulo="Inscripciones al taller"
+          texto="Las fechas, cupos y precios se cargan en cada taller."
+        >
+          <FormularioAdmin accion={guardarAjustes}>
+            <CampoConEtiqueta
+              etiqueta="Horas que se guarda el lugar"
+              ayuda="Si alguien se inscribe y no paga en ese tiempo, el lugar se libera para otra persona."
+              className="max-w-xs"
+            >
+              <Campo
+                name="ajuste_taller_reserva_horas"
+                type="number"
+                min={1}
+                max={720}
+                step={1}
+                inputMode="numeric"
+                defaultValue={ajuste(ajustes, "taller_reserva_horas")}
+              />
+            </CampoConEtiqueta>
+          </FormularioAdmin>
+        </PanelAdmin>
+
+        {/* ------------------------------------------------------------- */}
+        <PanelAdmin
           titulo="Zonas de envío"
           texto="El cliente elige su zona al finalizar el pedido. Si dejás el costo vacío, figura como “a coordinar”."
         >
@@ -460,6 +484,7 @@ export default async function AjustesAdmin() {
             <FormularioAdmin
               accion={guardarZona}
               textoBoton="Agregar zona"
+              limpiarAlGuardar
               tamano="sm"
               className="flex flex-wrap items-end gap-3 rounded-marca border border-dashed border-piedra/50 p-3"
             >

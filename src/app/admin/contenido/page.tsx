@@ -128,6 +128,7 @@ export default async function ContenidoAdmin() {
                   ["Sets y kits", "combos_titulo", "combos_titulo_cursiva"],
                   ["Servicios", "servicios_titulo", "servicios_titulo_cursiva"],
                   ["Antes y después", "antes_despues_titulo", "antes_despues_titulo_cursiva"],
+                  ["Talleres próximos", "talleres_titulo", "talleres_titulo_cursiva"],
                   ["Eventos", "eventos_titulo", "eventos_titulo_cursiva"],
                   ["Página Trabajos", "trabajos_titulo", "trabajos_titulo_cursiva"],
                   ["Preguntas frecuentes", "faq_titulo", "faq_titulo_cursiva"],
@@ -179,6 +180,17 @@ export default async function ContenidoAdmin() {
                   name="ajuste_antes_despues_texto"
                   rows={2}
                   defaultValue={ajuste(ajustes, "antes_despues_texto")}
+                />
+              </CampoConEtiqueta>
+
+              <CampoConEtiqueta
+                etiqueta="Texto debajo de Talleres próximos"
+                className="sm:col-span-2"
+              >
+                <AreaTexto
+                  name="ajuste_talleres_texto"
+                  rows={2}
+                  defaultValue={ajuste(ajustes, "talleres_texto")}
                 />
               </CampoConEtiqueta>
 
@@ -277,6 +289,48 @@ export default async function ContenidoAdmin() {
 
         {/* --------------------------------------------------------------- */}
         <PanelAdmin
+          titulo="Página del taller"
+          texto="La portada de /taller. El logo de la mariposa se sube en Ajustes."
+        >
+          <FormularioAdmin accion={guardarAjustes}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <CampoConEtiqueta etiqueta="Nombre del taller" ayuda="Se usa si no hay logo subido">
+                <Campo name="ajuste_taller_nombre" defaultValue={ajuste(ajustes, "taller_nombre")} />
+              </CampoConEtiqueta>
+              <CampoConEtiqueta etiqueta="Bajada" ayuda="La línea chiquita debajo del nombre">
+                <Campo name="ajuste_taller_bajada" defaultValue={ajuste(ajustes, "taller_bajada")} />
+              </CampoConEtiqueta>
+              <CampoConEtiqueta etiqueta="Título">
+                <Campo name="ajuste_taller_titulo" defaultValue={ajuste(ajustes, "taller_titulo")} />
+              </CampoConEtiqueta>
+              <CampoConEtiqueta etiqueta="Título en cursiva">
+                <Campo
+                  name="ajuste_taller_titulo_cursiva"
+                  defaultValue={ajuste(ajustes, "taller_titulo_cursiva")}
+                />
+              </CampoConEtiqueta>
+              <CampoConEtiqueta etiqueta="Texto" className="sm:col-span-2">
+                <AreaTexto
+                  name="ajuste_taller_texto"
+                  rows={3}
+                  defaultValue={ajuste(ajustes, "taller_texto")}
+                />
+              </CampoConEtiqueta>
+              <div className="sm:col-span-2">
+                <SubidorImagen
+                  nombre="ajuste_taller_imagen"
+                  carpeta="taller"
+                  etiqueta="Foto del taller"
+                  ayuda="Una foto de una clase o del espacio. Mejor horizontal."
+                  valorInicial={ajusteCrudo(ajustes, "taller_imagen")}
+                />
+              </div>
+            </div>
+          </FormularioAdmin>
+        </PanelAdmin>
+
+        {/* --------------------------------------------------------------- */}
+        <PanelAdmin
           titulo="Barra de beneficios"
           texto="La tira que va debajo de la portada."
         >
@@ -344,6 +398,7 @@ export default async function ContenidoAdmin() {
             <FormularioAdmin
               accion={guardarBeneficio}
               textoBoton="Agregar beneficio"
+              limpiarAlGuardar
               tamano="sm"
               className="flex flex-wrap items-end gap-3 rounded-marca border border-dashed border-piedra/50 p-3"
             >
@@ -434,6 +489,7 @@ export default async function ContenidoAdmin() {
             <FormularioAdmin
               accion={guardarFaq}
               textoBoton="Agregar pregunta"
+              limpiarAlGuardar
               tamano="sm"
               className="flex flex-col gap-3 rounded-marca border border-dashed border-piedra/50 p-3"
             >

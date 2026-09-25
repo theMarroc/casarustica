@@ -4,7 +4,7 @@ import { slugify } from "@/lib/utils";
 /** Genera un slug libre, agregando un número si ya existe. */
 export async function slugDisponible(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  tabla: "products" | "combos" | "categories" | "events" | "services",
+  tabla: "products" | "combos" | "categories" | "events" | "services" | "workshops",
   base: string,
   idActual?: string,
 ) {

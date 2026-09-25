@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { getUsuario } from "@/lib/auth";
+import { crearPreferencia } from "@/lib/mercadopago";
 import { validarPersonalizacion } from "@/lib/personalizacion";
 import { calcularPrecio, calcularSena } from "@/lib/pricing";
 import { aNumero, esVerdadero } from "@/lib/settings";
@@ -209,6 +210,7 @@ export async function crearPedido(
         kind: "product",
         product_id: producto.id,
         combo_id: null,
+        session_id: null,
         name: producto.name,
         unit_price: precio.final,
         quantity: item.cantidad,
@@ -237,6 +239,7 @@ export async function crearPedido(
         kind: "combo",
         product_id: null,
         combo_id: combo.id,
+        session_id: null,
         name: combo.name,
         unit_price: precio,
         quantity: item.cantidad,
@@ -394,81 +397,6 @@ export async function crearPedido(
   return { ok: true, url: urlPedido };
 }
 
-type DatosPreferencia = {
-  pedidoId: string;
-  codigo: string;
-  token: string;
-  lineas: Omit<OrderItem, "id" | "order_id">[];
-  envio: number;
-  /** Si el pedido lleva seña, lo que se cobra ahora, en una sola línea. */
-  aPagarAhora: number | null;
-  email?: string;
-};
-
-/** Crea la preferencia de Checkout Pro y devuelve el link de pago. */
-async function crearPreferencia(datos: DatosPreferencia): Promise<string | null> {
-  const accessToken = process.env.MP_ACCESS_TOKEN;
-  const sitio = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!accessToken || !sitio) return null;
-
-  try {
-    const { MercadoPagoConfig, Preference } = await import("mercadopago");
-    const cliente = new MercadoPagoConfig({ accessToken });
-    const preferencia = new Preference(cliente);
-
-    const volverA = `${sitio}/pedido/${datos.codigo}?t=${datos.token}`;
-
-    const items =
-      datos.aPagarAhora !== null
-        ? [
-            {
-              id: datos.codigo,
-              title: `Pedido ${datos.codigo}: seña y pago al confirmar`,
-              quantity: 1,
-              unit_price: datos.aPagarAhora,
-              currency_id: "ARS",
-            },
-          ]
-        : [
-            ...datos.lineas.map((linea) => ({
-              id: linea.product_id ?? linea.combo_id ?? linea.name,
-              title: linea.name,
-              quantity: linea.quantity,
-              unit_price: Number(linea.unit_price),
-              currency_id: "ARS",
-            })),
-            ...(datos.envio > 0
-              ? [
-                  {
-                    id: "envio",
-                    title: "Envío a domicilio",
-                    quantity: 1,
-                    unit_price: datos.envio,
-                    currency_id: "ARS",
-                  },
-                ]
-              : []),
-          ];
-
-    const respuesta = await preferencia.create({
-      body: {
-        items,
-        payer: datos.email ? { email: datos.email } : undefined,
-        external_reference: datos.pedidoId,
-        statement_descriptor: "CASA RUSTICA",
-        back_urls: { success: volverA, pending: volverA, failure: volverA },
-        auto_return: "approved",
-        notification_url: `${sitio}/api/mercadopago/webhook`,
-      },
-    });
-
-    return respuesta.init_point ?? null;
-  } catch (error) {
-    console.error("[mercadopago] no se pudo crear la preferencia", error);
-    return null;
-  }
-}
-
 /* ==========================================================================
    Comprobante de transferencia
 
@@ -600,6 +528,6 @@ export async function confirmarComprobante(
 
   return {
     ok: true,
-    mensaje: "¡Recibimos tu comprobante! Te confirmamos el pedido por WhatsApp.",
+    mensaje: "¡Recibimos tu comprobante! Te confirmamos por WhatsApp.",
   };
 }

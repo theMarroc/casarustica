@@ -202,12 +202,16 @@ export const ESTADOS_PEDIDO: Record<OrderStatus, { label: string; clase: string 
   cancelado: { label: "Cancelado", clase: "bg-carbon/10 text-carbon/60" },
 };
 
+export type OrderKind = "pedido" | "inscripcion";
+
 export type OrderItem = {
   id: string;
   order_id: string;
-  kind: "product" | "combo";
+  kind: "product" | "combo" | "workshop";
   product_id: string | null;
   combo_id: string | null;
+  /** Fecha del taller, en las inscripciones. */
+  session_id: string | null;
   name: string;
   unit_price: number;
   quantity: number;
@@ -220,6 +224,7 @@ export type Order = {
   id: string;
   code: string;
   access_token: string;
+  kind: OrderKind;
   user_id: string | null;
   customer_name: string;
   customer_phone: string;
@@ -303,6 +308,67 @@ export type ZonaEnvio = {
   cost: number | null;
   sort_order: number;
   is_active: boolean;
+};
+
+export type TipoTaller = "taller" | "profesorado";
+
+export const TIPOS_TALLER: Record<TipoTaller, string> = {
+  taller: "Taller o clase",
+  profesorado: "Profesorado",
+};
+
+/** Una fecha (o cohorte) de un taller, con su cupo, precio y seña. */
+export type FechaTaller = {
+  id: string;
+  workshop_id: string;
+  starts_at: string;
+  /** Días y horario, en texto libre. */
+  schedule: string | null;
+  capacity: number;
+  price: number;
+  /** Aclaración del precio: "Matrícula", "Materiales aparte", etc. */
+  price_note: string | null;
+  deposit_type: TipoSena;
+  deposit_value: number;
+  is_open: boolean;
+  /** Lugares ocupados (inscripciones vigentes). Lo completa db.ts. */
+  tomados: number;
+};
+
+export type Taller = {
+  id: string;
+  slug: string;
+  kind: TipoTaller;
+  name: string;
+  summary: string | null;
+  description: string | null;
+  duration: string | null;
+  includes_materials: boolean;
+  materials_note: string | null;
+  image_url: string | null;
+  sort_order: number;
+  is_active: boolean;
+  sessions: FechaTaller[];
+};
+
+export type EstadoEspera = "esperando" | "avisada" | "descartada";
+
+export const ESTADOS_ESPERA: Record<EstadoEspera, { label: string; clase: string }> = {
+  esperando: { label: "Esperando", clase: "bg-acento/40 text-nogal" },
+  avisada: { label: "Avisada", clase: "bg-salvia/20 text-salvia" },
+  descartada: { label: "Descartada", clase: "bg-carbon/10 text-carbon/60" },
+};
+
+export type AnotadaEnEspera = {
+  id: string;
+  workshop_id: string;
+  session_id: string | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  people: number;
+  status: EstadoEspera;
+  created_at: string;
 };
 
 /** Resultado que devuelven los formularios del panel. */

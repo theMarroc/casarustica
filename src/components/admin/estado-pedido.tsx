@@ -28,16 +28,21 @@ export function EstadoPedido({
   estadoInicial,
   conSena,
   conComprobante,
+  inscripcion = false,
 }: {
   pedidoId: string;
   estadoInicial: OrderStatus;
   conSena: boolean;
   conComprobante: boolean;
+  /** En una inscripción al taller no hay preparación ni entrega. */
+  inscripcion?: boolean;
 }) {
   const pasos = RECORRIDO.filter(
     (paso) =>
       paso === estadoInicial ||
-      (paso !== "sena_pagada" || conSena) && (paso !== "comprobante_enviado" || conComprobante),
+      ((paso !== "sena_pagada" || conSena) &&
+        (paso !== "comprobante_enviado" || conComprobante) &&
+        (!inscripcion || !["en_preparacion", "listo", "entregado"].includes(paso))),
   );
 
   const [estado, setEstado] = useState(estadoInicial);
@@ -59,7 +64,9 @@ export function EstadoPedido({
     if (
       nuevo === "cancelado" &&
       !window.confirm(
-        "¿Cancelar este pedido? Si tiene productos con stock controlado, las unidades vuelven al stock.",
+        inscripcion
+          ? "¿Cancelar esta inscripción? El lugar queda libre para otra persona."
+          : "¿Cancelar este pedido? Si tiene productos con stock controlado, las unidades vuelven al stock.",
       )
     ) {
       return;
@@ -150,7 +157,13 @@ export function EstadoPedido({
         ) : (
           <XCircle className="h-5 w-5 shrink-0" strokeWidth={1.5} />
         )}
-        {cancelado ? "Pedido cancelado" : "Cancelar pedido"}
+        {cancelado
+          ? inscripcion
+            ? "Inscripción cancelada"
+            : "Pedido cancelado"
+          : inscripcion
+            ? "Cancelar inscripción"
+            : "Cancelar pedido"}
       </button>
 
       {aviso ? (

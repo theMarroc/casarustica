@@ -14,16 +14,25 @@ export default async function LayoutAdmin({
 
   const perfil = await exigirAdminORedirigir();
   const supabase = await createClient();
-  const { count } = await supabase
-    .from("quote_requests")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "nueva");
+  const [presupuestos, espera] = await Promise.all([
+    supabase
+      .from("quote_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "nueva"),
+    supabase
+      .from("workshop_waitlist")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "esperando"),
+  ]);
 
   return (
     <div className="min-h-dvh bg-hueso lg:grid lg:grid-cols-[16rem_1fr]">
       <NavegacionAdmin
         nombre={perfil.full_name ?? "Administradora"}
-        presupuestosNuevos={count ?? 0}
+        avisos={{
+          "/admin/solicitudes": presupuestos.count ?? 0,
+          "/admin/talleres": espera.count ?? 0,
+        }}
       />
       <div className="min-w-0">
         <div className="mx-auto w-full max-w-5xl px-5 py-8 lg:px-10 lg:py-12">

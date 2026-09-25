@@ -11,6 +11,7 @@ import {
   PRODUCTOS_DEMO,
   SECCIONES_DEMO,
   SERVICIOS_DEMO,
+  TALLERES_DEMO,
   ZONAS_DEMO,
 } from "./demo-data";
 import { createClient, supabaseConfigurado } from "./supabase/server";
@@ -26,6 +27,7 @@ import type {
   Section,
   Servicio,
   Settings,
+  Taller,
   ZonaEnvio,
 } from "./types";
 
@@ -365,4 +367,66 @@ export const getServicioPorId = cache(async (id: string): Promise<Servicio | nul
   const { data, error } = await supabase.from("services").select("*").eq("id", id).maybeSingle();
   if (error) throw new Error(`No se pudo leer el servicio: ${error.message}`);
   return data;
+});
+
+/** Lugares ocupados por fecha de taller (función de la base, visible para todos). */
+const getLugaresTomados = cache(async (): Promise<Map<string, number>> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("lugares_tomados");
+  if (error) throw new Error(`No se pudieron contar los lugares: ${error.message}`);
+  return new Map(
+    ((data ?? []) as { session_id: string; tomados: number }[]).map((f) => [f.session_id, f.tomados]),
+  );
+});
+
+const SELECT_TALLER = "*, sessions:workshop_sessions(*)";
+
+function armarTaller(taller: Taller, tomados: Map<string, number>): Taller {
+  return {
+    ...taller,
+    sessions: [...(taller.sessions ?? [])]
+      .map((fecha) => ({
+        ...fecha,
+        price: Number(fecha.price),
+        deposit_value: Number(fecha.deposit_value),
+        tomados: tomados.get(fecha.id) ?? 0,
+      }))
+      .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
+  };
+}
+
+export const getTalleres = cache(async (incluirInactivos = false): Promise<Taller[]> => {
+  if (modoDemo()) return TALLERES_DEMO;
+
+  const supabase = await createClient();
+  let consulta = supabase.from("workshops").select(SELECT_TALLER).order("sort_order").order("name");
+  if (!incluirInactivos) consulta = consulta.eq("is_active", true);
+
+  const [{ data, error }, tomados] = await Promise.all([consulta, getLugaresTomados()]);
+  if (error) throw new Error(`No se pudieron leer los talleres: ${error.message}`);
+  return ((data as Taller[] | null) ?? []).map((t) => armarTaller(t, tomados));
+});
+
+export const getTaller = cache(async (slug: string): Promise<Taller | null> => {
+  if (modoDemo()) return TALLERES_DEMO.find((t) => t.slug === slug) ?? null;
+
+  const supabase = await createClient();
+  const [{ data, error }, tomados] = await Promise.all([
+    supabase.from("workshops").select(SELECT_TALLER).eq("slug", slug).maybeSingle(),
+    getLugaresTomados(),
+  ]);
+  if (error) throw new Error(`No se pudo leer el taller: ${error.message}`);
+  return data ? armarTaller(data as Taller, tomados) : null;
+});
+
+export const getTallerPorId = cache(async (id: string): Promise<Taller | null> => {
+  if (modoDemo()) return TALLERES_DEMO.find((t) => t.id === id) ?? null;
+
+  const supabase = await createClient();
+  const [{ data, error }, tomados] = await Promise.all([
+    supabase.from("workshops").select(SELECT_TALLER).eq("id", id).maybeSingle(),
+    getLugaresTomados(),
+  ]);
+  if (error) throw new Error(`No se pudo leer el taller: ${error.message}`);
+  return data ? armarTaller(data as Taller, tomados) : null;
 });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink, FileText } from "lucide-react";
 
@@ -38,6 +39,18 @@ export default async function DetallePedido({
   if (!pedido) notFound();
 
   const ajustes = await getAjustes();
+  const inscripcion = pedido.kind === "inscripcion";
+
+  // Cada línea de taller enlaza a su fecha en el panel.
+  const fechas = (pedido.items ?? []).flatMap((i) => (i.session_id ? [i.session_id] : []));
+  const tallerDeFecha = new Map<string, string>();
+  if (fechas.length) {
+    const { data: filas } = await supabase
+      .from("workshop_sessions")
+      .select("id, workshop_id")
+      .in("id", fechas);
+    for (const fila of filas ?? []) tallerDeFecha.set(fila.id, fila.workshop_id);
+  }
 
   // El bucket de comprobantes es privado: generamos un link temporal.
   let urlComprobante: string | null = null;
@@ -70,13 +83,25 @@ export default async function DetallePedido({
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="flex flex-col gap-6">
-          <PanelAdmin titulo="Qué pidió">
+          <PanelAdmin titulo={inscripcion ? "Inscripción" : "Qué pidió"}>
             <ul className="divide-y divide-piedra/20">
               {(pedido.items ?? []).map((item) => (
                 <li key={item.id} className="flex justify-between gap-4 py-2.5 text-sm">
                   <span className="text-carbon/80">
                     <span className="font-semibold text-carbon">{item.quantity}×</span>{" "}
-                    {item.name}
+                    {item.session_id && tallerDeFecha.has(item.session_id) ? (
+                      <Link
+                        href={`/admin/talleres/${tallerDeFecha.get(item.session_id)}/fechas/${item.session_id}`}
+                        className="underline decoration-piedra/50 underline-offset-2 hover:text-acento-fuerte"
+                      >
+                        {item.name}
+                      </Link>
+                    ) : (
+                      item.name
+                    )}
+                    {item.kind === "workshop" ? (
+                      <Insignia className="ml-2 bg-acento/30 text-nogal">Taller</Insignia>
+                    ) : null}
                     {item.kind === "combo" ? (
                       <Insignia className="ml-2 bg-acento/30 text-nogal">Set</Insignia>
                     ) : null}
@@ -108,7 +133,7 @@ export default async function DetallePedido({
 
             <dl className="mt-4 flex flex-col gap-1.5 border-t border-piedra/25 pt-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-carbon/70">Productos</dt>
+                <dt className="text-carbon/70">{inscripcion ? "Inscripción" : "Productos"}</dt>
                 <dd>{formatARS(Number(pedido.items_total))}</dd>
               </div>
               {Number(pedido.discount_total) > 0 ? (
@@ -117,18 +142,20 @@ export default async function DetallePedido({
                   <dd>-{formatARS(Number(pedido.discount_total))}</dd>
                 </div>
               ) : null}
-              <div className="flex justify-between">
-                <dt className="text-carbon/70">
-                  Envío{pedido.shipping_zone ? ` (${pedido.shipping_zone})` : ""}
-                </dt>
-                <dd>
-                  {pedido.delivery_type === "pickup"
-                    ? "Retira"
-                    : Number(pedido.shipping_total) === 0
-                      ? "A coordinar"
-                      : formatARS(Number(pedido.shipping_total))}
-                </dd>
-              </div>
+              {inscripcion ? null : (
+                <div className="flex justify-between">
+                  <dt className="text-carbon/70">
+                    Envío{pedido.shipping_zone ? ` (${pedido.shipping_zone})` : ""}
+                  </dt>
+                  <dd>
+                    {pedido.delivery_type === "pickup"
+                      ? "Retira"
+                      : Number(pedido.shipping_total) === 0
+                        ? "A coordinar"
+                        : formatARS(Number(pedido.shipping_total))}
+                  </dd>
+                </div>
+              )}
               <div className="mt-2 flex items-baseline justify-between border-t border-piedra/25 pt-3">
                 <dt className="text-[11px] uppercase tracking-[0.12em] text-piedra-oscura">
                   Total
@@ -140,13 +167,17 @@ export default async function DetallePedido({
               {Number(pedido.balance_due) > 0 ? (
                 <>
                   <div className="flex justify-between">
-                    <dt className="text-carbon/70">Al confirmar (seña incluida)</dt>
+                    <dt className="text-carbon/70">
+                      {inscripcion ? "Seña" : "Al confirmar (seña incluida)"}
+                    </dt>
                     <dd className="font-semibold">
                       {formatARS(Number(pedido.total) - Number(pedido.balance_due))}
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-carbon/70">Saldo al retirar o entregar</dt>
+                    <dt className="text-carbon/70">
+                      {inscripcion ? "Saldo en el taller" : "Saldo al retirar o entregar"}
+                    </dt>
                     <dd className="font-semibold">{formatARS(Number(pedido.balance_due))}</dd>
                   </div>
                 </>
@@ -154,14 +185,16 @@ export default async function DetallePedido({
             </dl>
           </PanelAdmin>
 
-          <PanelAdmin titulo="Datos de la entrega">
+          <PanelAdmin titulo={inscripcion ? "Datos de la persona" : "Datos de la entrega"}>
             <div className="grid gap-x-8 sm:grid-cols-2">
               <FilaDato etiqueta="Cliente">{pedido.customer_name}</FilaDato>
               <FilaDato etiqueta="WhatsApp">{pedido.customer_phone}</FilaDato>
               <FilaDato etiqueta="Email">{pedido.customer_email ?? "Sin email"}</FilaDato>
-              <FilaDato etiqueta="Forma de entrega">
-                {pedido.delivery_type === "delivery" ? "Envío a domicilio" : "Retira"}
-              </FilaDato>
+              {inscripcion ? null : (
+                <FilaDato etiqueta="Forma de entrega">
+                  {pedido.delivery_type === "delivery" ? "Envío a domicilio" : "Retira"}
+                </FilaDato>
+              )}
 
               {pedido.delivery_type === "delivery" ? (
                 <>
@@ -204,6 +237,7 @@ export default async function DetallePedido({
               estadoInicial={pedido.status}
               conSena={Number(pedido.balance_due) > 0}
               conComprobante={pedido.payment_method === "transfer"}
+              inscripcion={inscripcion}
             />
           </PanelAdmin>
 

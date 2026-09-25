@@ -12,6 +12,7 @@ import {
   MailQuestionMark,
   Menu,
   Package,
+  Palette,
   Percent,
   Settings,
   ShoppingBag,
@@ -51,6 +52,10 @@ const SECCIONES = [
     ],
   },
   {
+    titulo: "Taller",
+    enlaces: [{ href: "/admin/talleres", texto: "Talleres", Icono: Palette }],
+  },
+  {
     titulo: "Trabajos",
     enlaces: [
       { href: "/admin/antes-y-despues", texto: "Antes y después", Icono: SquareSplitHorizontal },
@@ -74,12 +79,18 @@ const SECCIONES = [
   },
 ];
 
+const TITULO_AVISO: Record<string, string> = {
+  "/admin/solicitudes": "Presupuestos nuevos sin mirar",
+  "/admin/talleres": "Personas en lista de espera",
+};
+
 export function NavegacionAdmin({
   nombre,
-  presupuestosNuevos,
+  avisos,
 }: {
   nombre: string;
-  presupuestosNuevos: number;
+  /** Contadores junto a algunos enlaces, por ruta. */
+  avisos: Record<string, number>;
 }) {
   const ruta = usePathname();
   const [abierto, setAbierto] = useState(false);
@@ -110,12 +121,12 @@ export function NavegacionAdmin({
                   >
                     <Icono className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                     {texto}
-                    {href === "/admin/solicitudes" && presupuestosNuevos > 0 ? (
+                    {avisos[href] ? (
                       <span
                         className="ml-auto rounded-full bg-acento-fuerte px-1.5 py-px text-[10px] font-bold text-white"
-                        title="Presupuestos nuevos sin mirar"
+                        title={TITULO_AVISO[href]}
                       >
-                        {presupuestosNuevos}
+                        {avisos[href]}
                       </span>
                     ) : null}
                   </Link>

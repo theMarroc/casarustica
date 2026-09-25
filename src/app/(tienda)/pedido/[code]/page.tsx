@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Banknote, CheckCircle2, Clock, Home, Store } from "lucide-react";
+import { Banknote, CheckCircle2, Clock, Home, MapPin, Store } from "lucide-react";
 
 import { DatosTransferencia } from "@/components/checkout/datos-transferencia";
 import { SubirComprobante } from "@/components/checkout/subir-comprobante";
@@ -12,8 +12,9 @@ import { getAjustes } from "@/lib/db";
 import { ajuste, ajusteCrudo, linkWhatsapp } from "@/lib/settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { supabaseConfigurado } from "@/lib/supabase/server";
+import { horasDeReserva, venceReserva } from "@/lib/talleres";
 import { ESTADOS_PEDIDO, type Order, type OrderItem } from "@/lib/types";
-import { formatARS, formatFecha } from "@/lib/utils";
+import { cn, formatARS, formatFecha } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Tu pedido",
@@ -52,9 +53,14 @@ export default async function PaginaPedido({
   const confirmado = ["sena_pagada", "pagado", "en_preparacion", "listo", "entregado"].includes(
     pedido.status,
   );
+  const inscripcion = pedido.kind === "inscripcion";
+  const reservadoHasta =
+    inscripcion && pedido.status === "pendiente_pago"
+      ? venceReserva(pedido.created_at, horasDeReserva(ajuste(ajustes, "taller_reserva_horas")))
+      : null;
 
   const mensajeWhatsapp = [
-    `¡Hola! Te escribo por el pedido ${pedido.code}`,
+    `¡Hola! Te escribo por ${inscripcion ? "la inscripción" : "el pedido"} ${pedido.code}`,
     `Total: ${formatARS(Number(pedido.total))}`,
     pedido.payment_method === "transfer"
       ? "Te envío el comprobante de la transferencia."
@@ -64,7 +70,7 @@ export default async function PaginaPedido({
   ].join("\n");
 
   return (
-    <div className="contenedor max-w-3xl py-12 lg:py-16">
+    <div className={cn("contenedor max-w-3xl py-12 lg:py-16", inscripcion && "marca-taller")}>
       <div className="flex flex-col items-center text-center">
         {confirmado ? (
           <CheckCircle2 className="h-12 w-12 text-salvia" strokeWidth={1.3} />
@@ -73,13 +79,15 @@ export default async function PaginaPedido({
         )}
 
         <h1 className="titulo-seccion mt-4 text-nogal">
-          ¡Gracias por tu <span className="cursiva-marca">pedido</span>!
+          ¡Gracias por tu{" "}
+          <span className="cursiva-marca">{inscripcion ? "inscripción" : "pedido"}</span>!
         </h1>
 
-        <Ornamento className="mt-5" />
+        <Ornamento className="mt-5" mariposa={inscripcion} />
 
         <p className="mt-5 max-w-lg text-sm leading-relaxed text-carbon/70">
-          Guardá este link: desde acá podés ver el estado de tu pedido
+          Guardá este link: desde acá podés ver el estado de tu{" "}
+          {inscripcion ? "inscripción" : "pedido"}
           {pedido.payment_method === "transfer" ? " y subir el comprobante." : "."}
         </p>
 
@@ -89,6 +97,14 @@ export default async function PaginaPedido({
           </span>
           <Insignia className={estado.clase}>{estado.label}</Insignia>
         </div>
+
+        {reservadoHasta ? (
+          <p className="mt-5 max-w-lg text-sm leading-relaxed text-carbon/70">
+            Si el pago no se acredita antes del{" "}
+            <strong className="font-semibold text-nogal">{formatFecha(reservadoHasta)}</strong>,
+            el lugar se libera para otra persona.
+          </p>
+        ) : null}
       </div>
 
       {esperandoComprobante ? (
@@ -103,8 +119,9 @@ export default async function PaginaPedido({
           />
           {saldo > 0 ? (
             <p className="mt-3 text-center text-sm text-carbon/70">
-              Es la seña y lo que se paga al confirmar. El resto ({formatARS(saldo)}) lo
-              pagás al retirar o al recibir.
+              {inscripcion
+                ? `Es la seña para reservar tu lugar. El resto (${formatARS(saldo)}) lo pagás en el taller.`
+                : `Es la seña y lo que se paga al confirmar. El resto (${formatARS(saldo)}) lo pagás al retirar o al recibir.`}
             </p>
           ) : null}
         </section>
@@ -129,6 +146,7 @@ export default async function PaginaPedido({
             codigo={pedido.code}
             token={pedido.access_token}
             yaSubido={Boolean(pedido.receipt_path)}
+            inscripcion={inscripcion}
           />
         </section>
       ) : null}
@@ -169,21 +187,23 @@ export default async function PaginaPedido({
               </dd>
             </div>
           ) : null}
-          <div className="flex justify-between">
-            <dt className="text-carbon/70">Envío</dt>
-            <dd className="font-semibold">
-              {pedido.delivery_type === "pickup"
-                ? "Retiro"
-                : Number(pedido.shipping_total) > 0
-                  ? formatARS(Number(pedido.shipping_total))
-                  : "A coordinar"}
-              {pedido.shipping_zone ? (
-                <span className="ml-1 font-normal text-piedra-oscura">
-                  ({pedido.shipping_zone})
-                </span>
-              ) : null}
-            </dd>
-          </div>
+          {inscripcion ? null : (
+            <div className="flex justify-between">
+              <dt className="text-carbon/70">Envío</dt>
+              <dd className="font-semibold">
+                {pedido.delivery_type === "pickup"
+                  ? "Retiro"
+                  : Number(pedido.shipping_total) > 0
+                    ? formatARS(Number(pedido.shipping_total))
+                    : "A coordinar"}
+                {pedido.shipping_zone ? (
+                  <span className="ml-1 font-normal text-piedra-oscura">
+                    ({pedido.shipping_zone})
+                  </span>
+                ) : null}
+              </dd>
+            </div>
+          )}
           <div className="flex items-baseline justify-between border-t border-piedra/25 pt-3">
             <dt className="text-sm uppercase tracking-[0.1em] text-piedra-oscura">Total</dt>
             <dd className="font-display text-2xl text-nogal">
@@ -193,11 +213,15 @@ export default async function PaginaPedido({
           {saldo > 0 ? (
             <>
               <div className="flex justify-between">
-                <dt className="text-carbon/70">Al confirmar (seña incluida)</dt>
+                <dt className="text-carbon/70">
+                  {inscripcion ? "Ahora, la seña" : "Al confirmar (seña incluida)"}
+                </dt>
                 <dd className="font-semibold">{formatARS(aPagarAhora)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-carbon/70">Al retirar o recibir</dt>
+                <dt className="text-carbon/70">
+                  {inscripcion ? "En el taller" : "Al retirar o recibir"}
+                </dt>
                 <dd className="font-semibold">{formatARS(saldo)}</dd>
               </div>
             </>
@@ -207,7 +231,11 @@ export default async function PaginaPedido({
         <div className="mt-6 grid gap-4 border-t border-piedra/25 pt-5 text-sm sm:grid-cols-2">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-nogal">
-              {pedido.delivery_type === "delivery" ? (
+              {inscripcion ? (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" /> Dónde
+                </span>
+              ) : pedido.delivery_type === "delivery" ? (
                 <span className="flex items-center gap-1.5">
                   <Home className="h-3.5 w-3.5" /> Entrega
                 </span>
@@ -227,14 +255,15 @@ export default async function PaginaPedido({
                   {pedido.address_zone ? `, ${pedido.address_zone}` : ""}
                 </>
               ) : (
-                ajuste(ajustes, "retiro_direccion") || "Coordinamos por WhatsApp"
+                ajusteCrudo(ajustes, "retiro_direccion") ||
+                (inscripcion ? "Te pasamos la dirección del taller por WhatsApp" : "Coordinamos por WhatsApp")
               )}
             </p>
           </div>
 
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-nogal">
-              Pedido realizado
+              {inscripcion ? "Inscripción realizada" : "Pedido realizado"}
             </p>
             <p className="mt-1.5 text-carbon/70">{formatFecha(pedido.created_at)}</p>
             <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-nogal">
@@ -264,8 +293,11 @@ export default async function PaginaPedido({
           <IconoWhatsapp className="h-4 w-4" />
           Escribirnos por WhatsApp
         </a>
-        <Link href="/tienda" className={estilosBoton("secundario", "md")}>
-          Seguir comprando
+        <Link
+          href={inscripcion ? "/taller" : "/tienda"}
+          className={estilosBoton("secundario", "md")}
+        >
+          {inscripcion ? "Ver más talleres" : "Seguir comprando"}
         </Link>
       </div>
     </div>

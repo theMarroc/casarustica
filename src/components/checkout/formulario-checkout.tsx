@@ -8,10 +8,11 @@ import { useActionState, useEffect, useState } from "react";
 import { crearPedido, type ResultadoPedido } from "@/actions/pedidos";
 import { useCarrito } from "@/components/cart/carrito";
 import { DetalleLinea } from "@/components/cart/detalle-linea";
+import { OpcionTarjeta } from "@/components/checkout/opcion-tarjeta";
 import { Boton, estilosBoton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta, Selector } from "@/components/ui/campos";
 import type { Address, PaymentMethod, ZonaEnvio } from "@/lib/types";
-import { cn, formatARS } from "@/lib/utils";
+import { formatARS } from "@/lib/utils";
 
 type Props = {
   usuario: { email: string; nombre: string; telefono: string } | null;
@@ -502,43 +503,5 @@ export function FormularioCheckout({
         </p>
       </aside>
     </form>
-  );
-}
-
-function OpcionTarjeta({
-  activa,
-  onClick,
-  icono,
-  titulo,
-  detalle,
-}: {
-  activa: boolean;
-  onClick: () => void;
-  icono: React.ReactNode;
-  titulo: string;
-  detalle: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={activa}
-      className={cn(
-        "flex items-start gap-3 rounded-marca border p-4 text-left transition-colors",
-        activa
-          ? "border-acento-fuerte bg-acento-fuerte/5"
-          : "border-piedra/40 bg-white hover:border-piedra",
-      )}
-    >
-      <span className={cn("mt-0.5", activa ? "text-acento-fuerte" : "text-piedra-oscura")}>
-        {icono}
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold text-nogal">{titulo}</span>
-        <span className="mt-0.5 block text-xs leading-snug text-carbon/65">
-          {detalle}
-        </span>
-      </span>
-    </button>
   );
 }

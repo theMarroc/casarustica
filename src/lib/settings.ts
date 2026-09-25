@@ -55,6 +55,10 @@ export const AJUSTES_POR_DEFECTO = {
     "Muebles restaurados, piezas recicladas y eventos ambientados en Miramar, Mar del Plata y zona.",
   faq_titulo: "Preguntas",
   faq_titulo_cursiva: "frecuentes",
+  talleres_titulo: "Próximos",
+  talleres_titulo_cursiva: "talleres",
+  talleres_texto:
+    "Clases, workshops y el profesorado de Arte Mix Media en el taller Azul Tiffany, en Miramar.",
   newsletter_titulo: "Sumate a Casa Rústica",
   newsletter_texto: "Recibí novedades, piezas nuevas y las fechas de los próximos talleres.",
 
@@ -65,6 +69,17 @@ export const AJUSTES_POR_DEFECTO = {
   nosotros_imagen: "",
   nosotros_texto:
     "Casa Rústica es el taller de Silvina Scalzo en Miramar. Profesora de Arte Mix Media, pinta, recicla y restaura muebles y objetos, y crea piezas de deco para el hogar y para eventos.\n\nCada bandeja, lata o cartel se pinta y se termina a mano, con técnicas que van del efecto madera al zincado y el mármol. La idea es siempre la misma: dar nueva vida a lo que parecía perdido.",
+
+  // --- Taller Azul Tiffany ----------------------------------------------
+  taller_nombre: "Azul Tiffany",
+  taller_bajada: "Espacio de arte",
+  taller_titulo: "Taller de arte",
+  taller_titulo_cursiva: "Azul Tiffany",
+  taller_texto:
+    "Talleres, workshops, clases intensivas y el profesorado de Arte Mix Media. Aprendés técnicas de pintura y decoración, y te llevás tu pieza terminada.",
+  taller_imagen: "",
+  // Horas que una inscripción sin pagar guarda el lugar (lo lee también la base).
+  taller_reserva_horas: "48",
 
   // --- Contacto y redes --------------------------------------------------
   whatsapp_numero: "5492291000000",

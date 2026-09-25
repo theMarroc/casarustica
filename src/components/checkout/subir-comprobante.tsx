@@ -29,10 +29,12 @@ export function SubirComprobante({
   codigo,
   token,
   yaSubido,
+  inscripcion = false,
 }: {
   codigo: string;
   token: string;
   yaSubido: boolean;
+  inscripcion?: boolean;
 }) {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [fase, setFase] = useState<Fase>(yaSubido ? "listo" : "elegir");
@@ -119,8 +121,8 @@ export function SubirComprobante({
         Subí el comprobante
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-carbon/70">
-        Es el paso que reserva tu pedido. Podés subir una foto, una captura o el PDF que
-        te da el banco.
+        Es el paso que reserva tu {inscripcion ? "lugar" : "pedido"}. Podés subir una foto,
+        una captura o el PDF que te da el banco.
       </p>
 
       <label

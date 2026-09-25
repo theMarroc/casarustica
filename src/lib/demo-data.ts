@@ -7,6 +7,7 @@ import type {
   Product,
   Section,
   Servicio,
+  Taller,
   ZonaEnvio,
 } from "./types";
 
@@ -348,11 +349,12 @@ export const SECCIONES_DEMO: Section[] = [
   { key: "combos", label: "Sets y kits", description: null, is_enabled: true, sort_order: 6 },
   { key: "servicios", label: "Servicios", description: null, is_enabled: true, sort_order: 7 },
   { key: "antes_despues", label: "Antes y después", description: null, is_enabled: true, sort_order: 8 },
-  { key: "eventos", label: "Eventos y bodas", description: null, is_enabled: true, sort_order: 9 },
-  { key: "frase", label: "Franja con la frase", description: null, is_enabled: true, sort_order: 10 },
-  { key: "mapa_delivery", label: "Zona de entrega", description: null, is_enabled: true, sort_order: 11 },
-  { key: "faq", label: "Preguntas frecuentes", description: null, is_enabled: true, sort_order: 12 },
-  { key: "newsletter", label: "Newsletter", description: null, is_enabled: true, sort_order: 13 },
+  { key: "talleres", label: "Talleres próximos", description: null, is_enabled: true, sort_order: 9 },
+  { key: "eventos", label: "Eventos y bodas", description: null, is_enabled: true, sort_order: 10 },
+  { key: "frase", label: "Franja con la frase", description: null, is_enabled: true, sort_order: 11 },
+  { key: "mapa_delivery", label: "Zona de entrega", description: null, is_enabled: true, sort_order: 12 },
+  { key: "faq", label: "Preguntas frecuentes", description: null, is_enabled: true, sort_order: 13 },
+  { key: "newsletter", label: "Newsletter", description: null, is_enabled: true, sort_order: 14 },
 ];
 
 export const BENEFICIOS_DEMO = [
@@ -499,5 +501,91 @@ export const SERVICIOS_DEMO: Servicio[] = [
     showcase: "none",
     sort_order: 3,
     is_active: true,
+  },
+];
+
+/** Fechas relativas a hoy, para que la demo siempre tenga fechas próximas. */
+const enDias = (dias: number, hora: number) => {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + dias);
+  fecha.setHours(hora, 0, 0, 0);
+  return fecha.toISOString();
+};
+
+// Precios y horarios de ejemplo: los reales los carga Silvina.
+export const TALLERES_DEMO: Taller[] = [
+  {
+    id: "tl-1",
+    slug: "taller-de-decoracion",
+    kind: "taller",
+    name: "Taller de decoración y técnicas múltiples",
+    summary:
+      "Pintura a la tiza, efectos decorativos y renovación de muebles y objetos, en grupos chicos.",
+    description:
+      "Un espacio para aprender técnicas de pintura y decoración: pintura a la tiza, efecto madera, zincado y mármol, stencils y transfers, y renovación de muebles y objetos.\n\nCada encuentro trabajás sobre tu propia pieza, con acompañamiento de Silvina.",
+    duration: "4 encuentros de 2 horas (ejemplo)",
+    includes_materials: true,
+    materials_note: null,
+    image_url: null,
+    sort_order: 1,
+    is_active: true,
+    sessions: [
+      {
+        id: "tf-1",
+        workshop_id: "tl-1",
+        starts_at: enDias(12, 18),
+        schedule: "Martes de 18 a 20 (ejemplo)",
+        capacity: 8,
+        price: 40000,
+        price_note: "Precio de ejemplo",
+        deposit_type: "percent",
+        deposit_value: 30,
+        is_open: true,
+        tomados: 5,
+      },
+      {
+        id: "tf-2",
+        workshop_id: "tl-1",
+        starts_at: enDias(26, 10),
+        schedule: "Sábados de 10 a 12 (ejemplo)",
+        capacity: 6,
+        price: 40000,
+        price_note: "Precio de ejemplo",
+        deposit_type: "percent",
+        deposit_value: 30,
+        is_open: true,
+        tomados: 6,
+      },
+    ],
+  },
+  {
+    id: "tl-2",
+    slug: "profesorado-arte-mix-media",
+    kind: "profesorado",
+    name: "Profesorado de Arte Mix Media",
+    summary: "Formación para enseñar técnicas de arte decorativo y mix media.",
+    description:
+      "Una formación para quienes quieren enseñar o profundizar en las técnicas de arte decorativo y mix media.\n\nConsultanos por la duración y el programa.",
+    duration: null,
+    includes_materials: false,
+    materials_note: "Los materiales se compran aparte.",
+    image_url: null,
+    sort_order: 2,
+    is_active: true,
+    sessions: [
+      {
+        id: "tf-3",
+        workshop_id: "tl-2",
+        starts_at: enDias(40, 17),
+        schedule: "Un jueves por semana (ejemplo)",
+        capacity: 10,
+        price: 60000,
+        price_note: "Matrícula de ejemplo. Las cuotas se pagan en el taller.",
+        deposit_type: "none",
+        deposit_value: 0,
+        is_open: true,
+        tomados: 2,
+      },
+    ],
   },
 ];

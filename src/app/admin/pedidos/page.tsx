@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, FileCheck, Home, Store } from "lucide-react";
+import { CheckCircle2, FileCheck, Home, Palette, Store } from "lucide-react";
 
 import { PanelAdmin, SinDatos, TituloAdmin } from "@/components/admin/piezas";
 import { Insignia } from "@/components/ui/campos";
@@ -22,11 +22,13 @@ const FILTROS = [
   { valor: "listo", texto: "Listos" },
   { valor: "entregado", texto: "Entregados" },
   { valor: "cancelado", texto: "Cancelados" },
+  { valor: "inscripciones", texto: "Inscripciones al taller" },
 ] as const;
 
 type FilaPedido = Pick<
   Order,
   | "id"
+  | "kind"
   | "code"
   | "customer_name"
   | "customer_phone"
@@ -49,12 +51,14 @@ export default async function PedidosAdmin({
   let consulta = supabase
     .from("orders")
     .select(
-      "id, code, customer_name, customer_phone, status, total, created_at, delivery_type, payment_method, receipt_path",
+      "id, kind, code, customer_name, customer_phone, status, total, created_at, delivery_type, payment_method, receipt_path",
     )
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (filtro === "por_revisar") {
+  if (filtro === "inscripciones") {
+    consulta = consulta.eq("kind", "inscripcion");
+  } else if (filtro === "por_revisar") {
     consulta = consulta.in("status", ["pendiente_pago", "comprobante_enviado"]);
   } else if (filtro) {
     consulta = consulta.eq("status", filtro);
@@ -67,7 +71,7 @@ export default async function PedidosAdmin({
     <>
       <TituloAdmin
         titulo="Pedidos"
-        texto="Acá entran todos los pedidos de la web. Tocá uno para ver el detalle, el comprobante y cambiarle el estado."
+        texto="Acá entran todos los pedidos de la web, también las inscripciones al taller. Tocá uno para ver el detalle, el comprobante y cambiarle el estado."
       />
 
       {borrado ? (
@@ -121,12 +125,19 @@ export default async function PedidosAdmin({
                         {pedido.customer_name}
                       </p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-xs text-piedra-oscura">
-                        {pedido.delivery_type === "delivery" ? (
+                        {pedido.kind === "inscripcion" ? (
+                          <Palette className="h-3 w-3" />
+                        ) : pedido.delivery_type === "delivery" ? (
                           <Home className="h-3 w-3" />
                         ) : (
                           <Store className="h-3 w-3" />
                         )}
-                        {pedido.delivery_type === "delivery" ? "Envío" : "Retiro"} ·{" "}
+                        {pedido.kind === "inscripcion"
+                          ? "Inscripción al taller"
+                          : pedido.delivery_type === "delivery"
+                            ? "Envío"
+                            : "Retiro"}{" "}
+                        ·{" "}
                         {METODOS_PAGO[pedido.payment_method]}{" "}
                         · {formatFecha(pedido.created_at)}
                       </p>

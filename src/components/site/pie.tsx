@@ -139,6 +139,9 @@ export function Pie({
             <Link href="/servicios" className="transition-colors hover:text-nogal">
               Servicios
             </Link>
+            <Link href="/taller" className="transition-colors hover:text-nogal">
+              Taller
+            </Link>
             <Link href="/trabajos" className="transition-colors hover:text-nogal">
               Trabajos
             </Link>

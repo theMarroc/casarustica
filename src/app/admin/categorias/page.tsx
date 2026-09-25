@@ -142,6 +142,7 @@ export default async function CategoriasAdmin({
             <FormularioAdmin
               accion={guardarCategoria}
               textoBoton={enEdicion ? "Guardar" : "Crear categoría"}
+              limpiarAlGuardar={!enEdicion}
               className="flex flex-col gap-4"
               key={enEdicion?.id ?? "nueva"}
             >
