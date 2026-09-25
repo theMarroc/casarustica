@@ -5,7 +5,7 @@ taller de arte Azul Tiffany. Vende productos (con stock, a pedido y
 personalizables), recibe pedidos de presupuesto de sus servicios e inscribe a
 sus talleres con cupo y seña. Tiene panel de administración para gestionar todo.
 
-Publicada en <https://casarustica.vercel.app>. El manual para la administradora
+Publicada en <https://www.estilorustica.com>. El manual para la administradora
 está dentro del panel, en **Ayuda** (`/admin/ayuda`).
 
 Todo el stack es **gratis**: Next.js en Vercel + Supabase (base de datos, login

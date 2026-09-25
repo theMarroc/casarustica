@@ -40,7 +40,8 @@ update o delete).
 - Lista de espera por fecha llena, o "avisame cuando haya fecha" si el taller no tiene fechas. Se ve en el panel con botón de WhatsApp; el menú cuenta las personas esperando.
 - La dirección del taller es la misma de retiro (Ajustes › Envíos y retiro).
 - Los formularios del panel se envían a mano: React 19 vaciaba el formulario después de un error y se perdía lo escrito.
-- Auth (25/09/2026): Site URL `https://casarustica.vercel.app`, Redirect URLs de producción y de `localhost:3000`, y **Confirm email apagado**: el servidor de mails gratis de Supabase solo entrega al equipo del proyecto. Si más adelante se configura un correo propio (SMTP), se puede volver a prender.
+- Dominio propio (25/09/2026): `www.estilorustica.com`, comprado en Namecheap. DNS en Namecheap: dos registros A de `@` (216.198.79.1 y 64.29.17.1) y un CNAME de `www` hacia Vercel. `estilorustica.com` y `casarustica.vercel.app` redirigen a `www`. `NEXT_PUBLIC_SITE_URL` en Vercel apunta al dominio nuevo.
+- Auth (25/09/2026): Site URL `https://www.estilorustica.com`, Redirect URLs del dominio, de `casarustica.vercel.app` y de `localhost:3000`, y **Confirm email apagado**: el servidor de mails gratis de Supabase solo entrega al equipo del proyecto. Si más adelante se configura un correo propio (SMTP), se puede volver a prender.
 - Mercado Pago queda para más adelante: por ahora se cobra por transferencia con comprobante y en efectivo al retirar.
 - Vercel llama todos los días a `/api/mantener-activo` (cron en `vercel.json`) para que Supabase no pause el proyecto.
 - El manual de uso está dentro del panel, en Ayuda (`/admin/ayuda`).
