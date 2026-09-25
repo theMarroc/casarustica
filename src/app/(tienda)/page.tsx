@@ -10,6 +10,7 @@ import { Newsletter } from "@/components/home/newsletter";
 import { Portada } from "@/components/home/portada";
 import { SeccionPreguntas } from "@/components/home/preguntas";
 import { GrillaProductos, TarjetaCombo } from "@/components/shop/tarjeta-producto";
+import { TarjetaServicio } from "@/components/servicios/tarjeta-servicio";
 import { TarjetaAntesDespues, TarjetaEvento } from "@/components/trabajos/tarjetas";
 import { AvisoDemo } from "@/components/site/aviso-demo";
 import { estilosBoton } from "@/components/ui/boton";
@@ -24,6 +25,7 @@ import {
   getOfertas,
   getProductos,
   getSecciones,
+  getServicios,
   getZonasEnvio,
   modoDemo,
 } from "@/lib/db";
@@ -44,6 +46,7 @@ export default async function Inicio() {
     trabajos,
     eventos,
     zonas,
+    servicios,
   ] = await Promise.all([
     getAjustes(),
     getSecciones(),
@@ -57,6 +60,7 @@ export default async function Inicio() {
     getAntesDespues(),
     getEventos(),
     getZonasEnvio(),
+    getServicios(),
   ]);
 
   const enOferta = todos.filter((p) => calcularPrecio(p, ofertas).oferta !== null);
@@ -121,9 +125,31 @@ export default async function Inicio() {
           </div>
         </section>
       ) : null,
+    servicios:
+      servicios.length > 0 ? (
+        <section className="bg-hueso py-16 lg:py-24">
+          <div className="contenedor">
+            <div className="flex flex-wrap items-end justify-between gap-6">
+              <EncabezadoSeccion
+                titulo={ajuste(ajustes, "servicios_titulo")}
+                tituloCursiva={ajuste(ajustes, "servicios_titulo_cursiva")}
+                texto={ajuste(ajustes, "servicios_texto")}
+              />
+              <Link href="/servicios" className={estilosBoton("secundario", "md")}>
+                Ver servicios
+              </Link>
+            </div>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {servicios.slice(0, 3).map((servicio) => (
+                <TarjetaServicio key={servicio.id} servicio={servicio} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null,
     antes_despues:
       trabajos.length > 0 ? (
-        <section className="bg-hueso py-16 lg:py-24">
+        <section className="bg-lino py-16 lg:py-24">
           <div className="contenedor">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <EncabezadoSeccion
@@ -145,7 +171,7 @@ export default async function Inicio() {
       ) : null,
     eventos:
       eventos.length > 0 ? (
-        <section className="bg-lino py-16 lg:py-24">
+        <section className="bg-hueso py-16 lg:py-24">
           <div className="contenedor">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <EncabezadoSeccion

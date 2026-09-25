@@ -3,7 +3,7 @@ import Link from "next/link";
 import { NavegacionAdmin } from "@/components/admin/navegacion";
 import { Logo } from "@/components/ui/marca";
 import { exigirAdminORedirigir } from "@/lib/auth";
-import { supabaseConfigurado } from "@/lib/supabase/server";
+import { createClient, supabaseConfigurado } from "@/lib/supabase/server";
 
 export default async function LayoutAdmin({
   children,
@@ -13,10 +13,18 @@ export default async function LayoutAdmin({
   if (!supabaseConfigurado()) return <PantallaSinConfigurar />;
 
   const perfil = await exigirAdminORedirigir();
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("quote_requests")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "nueva");
 
   return (
     <div className="min-h-dvh bg-hueso lg:grid lg:grid-cols-[16rem_1fr]">
-      <NavegacionAdmin nombre={perfil.full_name ?? "Administradora"} />
+      <NavegacionAdmin
+        nombre={perfil.full_name ?? "Administradora"}
+        presupuestosNuevos={count ?? 0}
+      />
       <div className="min-w-0">
         <div className="mx-auto w-full max-w-5xl px-5 py-8 lg:px-10 lg:py-12">
           {children}

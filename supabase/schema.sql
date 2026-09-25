@@ -285,6 +285,62 @@ create table if not exists public.event_images (
 
 create index if not exists event_images_event_idx on public.event_images (event_id);
 
+-- ---------------------------------------------------------------------------
+-- Servicios y pedidos de presupuesto
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.services (
+  id uuid primary key default gen_random_uuid(),
+  slug text not null unique,
+  name text not null,
+  summary text,
+  description text,
+  image_url text,
+  asks_photos boolean not null default true,
+  asks_measures boolean not null default false,
+  asks_date boolean not null default false,
+  showcase text not null default 'none' check (showcase in ('none', 'antes_despues', 'eventos')),
+  sort_order integer not null default 0,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Los crea el servidor (con la clave de servicio): el público no escribe acá.
+create table if not exists public.quote_requests (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  access_token text not null,
+  service_id uuid references public.services on delete set null,
+  service_name text not null,
+  customer_name text not null,
+  customer_phone text not null,
+  customer_email text,
+  location text,
+  event_date date,
+  measures text,
+  message text not null,
+  status text not null default 'nueva' check (
+    status in ('nueva', 'presupuestada', 'aceptada', 'terminada', 'descartada')
+  ),
+  quoted_amount numeric(12, 2) check (quoted_amount is null or quoted_amount >= 0),
+  internal_notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists quote_requests_status_idx on public.quote_requests (status);
+
+create table if not exists public.quote_request_images (
+  id uuid primary key default gen_random_uuid(),
+  request_id uuid not null references public.quote_requests on delete cascade,
+  path text not null,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists quote_request_images_request_idx on public.quote_request_images (request_id);
+
 -- El carrusel de fotos se reemplazó por Antes y después y Eventos.
 drop table if exists public.gallery_images;
 
@@ -422,7 +478,7 @@ declare
   t text;
 begin
   for t in
-    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones'])
+    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones', 'services', 'quote_requests'])
   loop
     execute format('drop trigger if exists set_updated_at_%1$s on public.%1$s', t);
     execute format(
@@ -476,6 +532,9 @@ alter table public.before_after enable row level security;
 alter table public.events enable row level security;
 alter table public.event_images enable row level security;
 alter table public.shipping_zones enable row level security;
+alter table public.services enable row level security;
+alter table public.quote_requests enable row level security;
+alter table public.quote_request_images enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
@@ -608,6 +667,23 @@ drop policy if exists "zonas de envio administrables" on public.shipping_zones;
 create policy "zonas de envio administrables" on public.shipping_zones
   for all using (public.is_admin()) with check (public.is_admin());
 
+drop policy if exists "servicios visibles" on public.services;
+create policy "servicios visibles" on public.services
+  for select using (is_active or public.is_admin());
+
+drop policy if exists "servicios administrables" on public.services;
+create policy "servicios administrables" on public.services
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- Los pedidos de presupuesto solo los ve y maneja la administradora.
+drop policy if exists "presupuestos solo admin" on public.quote_requests;
+create policy "presupuestos solo admin" on public.quote_requests
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "fotos de presupuestos solo admin" on public.quote_request_images;
+create policy "fotos de presupuestos solo admin" on public.quote_request_images
+  for all using (public.is_admin()) with check (public.is_admin());
+
 -- --- Newsletter ------------------------------------------------------------
 drop policy if exists "cualquiera se suscribe" on public.newsletter_subscribers;
 create policy "cualquiera se suscribe" on public.newsletter_subscribers
@@ -669,6 +745,17 @@ on conflict (id) do update set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
+-- Fotos que manda el público para pedir presupuesto: privadas, como los comprobantes.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'solicitudes', 'solicitudes', false, 10485760,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update set
+  public = false,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
 drop policy if exists "imagenes de productos publicas" on storage.objects;
 create policy "imagenes de productos publicas" on storage.objects
   for select using (bucket_id = 'productos');
@@ -699,12 +786,13 @@ insert into public.sections (key, label, description, sort_order) values
   ('destacados',       'Productos destacados',   'Los productos marcados como destacados.',               4),
   ('ofertas',          'Ofertas vigentes',       'Productos con descuento activo.',                       5),
   ('combos',           'Sets y kits',            'Los sets y kits armados desde el panel.',               6),
-  ('antes_despues',    'Antes y después',        'Los trabajos de restauración, con el comparador.',      7),
-  ('eventos',          'Eventos y bodas',        'Los últimos eventos ambientados.',                      8),
-  ('frase',            'Franja con la frase',    'La franja con la frase de la marca.',                   9),
-  ('mapa_delivery',    'Zona de entrega',        'Texto y mapa de la zona donde se entrega.',            10),
-  ('faq',              'Preguntas frecuentes',   'El acordeón de preguntas y respuestas.',               11),
-  ('newsletter',       'Newsletter',             'El formulario para dejar el mail.',                    12)
+  ('servicios',        'Servicios',              'Restauración, ambientación y asesoría.',                7),
+  ('antes_despues',    'Antes y después',        'Los trabajos de restauración, con el comparador.',      8),
+  ('eventos',          'Eventos y bodas',        'Los últimos eventos ambientados.',                      9),
+  ('frase',            'Franja con la frase',    'La franja con la frase de la marca.',                  10),
+  ('mapa_delivery',    'Zona de entrega',        'Texto y mapa de la zona donde se entrega.',            11),
+  ('faq',              'Preguntas frecuentes',   'El acordeón de preguntas y respuestas.',               12),
+  ('newsletter',       'Newsletter',             'El formulario para dejar el mail.',                    13)
 on conflict (key) do nothing;
 
 insert into public.benefits (icon, title, subtitle, sort_order) values
@@ -737,6 +825,21 @@ insert into public.categories (slug, name, description, sort_order) values
 on conflict (slug) do nothing;
 
 -- Los productos no se precargan: los carga Silvina desde el panel.
+
+insert into public.services (slug, name, summary, description, asks_photos, asks_measures, asks_date, showcase, sort_order) values
+  ('restauracion', 'Restauración y reciclado',
+   'Muebles y cuadros que recuperan su historia. Mandanos fotos y te pasamos presupuesto.',
+   'Restauramos, reciclamos y pintamos muebles, cuadros y objetos: lijado, pintura a la tiza, efectos decorativos y herrajes nuevos.' || chr(10) || chr(10) || 'Contanos qué tenés, mandanos fotos y las medidas, y te pasamos un presupuesto.',
+   true, true, false, 'antes_despues', 1),
+  ('ambientacion', 'Ambientación de eventos',
+   'Bodas, cumpleaños y celebraciones: mesas, cartelería, centros y souvenirs.',
+   'Ambientamos tu evento con mesas vintage, cartelería de bienvenida, centros de mesa y souvenirs personalizados.' || chr(10) || chr(10) || 'Contanos la fecha, el lugar y la idea que tenés, y armamos una propuesta.',
+   true, false, true, 'eventos', 2),
+  ('asesoria', 'Asesoría de estilo',
+   'Te ayudamos a definir el estilo de tu casa: colores, iluminación y deco para cada ambiente.',
+   'Te acompañamos a definir el estilo de tu casa o de un ambiente: paleta de colores, iluminación, muebles y detalles de deco.' || chr(10) || chr(10) || 'Mandanos fotos del lugar y contanos qué te gustaría lograr.',
+   true, false, false, 'none', 3)
+on conflict (slug) do nothing;
 
 -- Zonas sin costo cargado: se ven como "a coordinar" hasta que ella ponga el precio.
 insert into public.shipping_zones (name, cost, sort_order) values

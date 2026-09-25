@@ -6,6 +6,7 @@ import type {
   Offer,
   Product,
   Section,
+  Servicio,
   ZonaEnvio,
 } from "./types";
 
@@ -345,12 +346,13 @@ export const SECCIONES_DEMO: Section[] = [
   { key: "destacados", label: "Productos destacados", description: null, is_enabled: true, sort_order: 4 },
   { key: "ofertas", label: "Ofertas vigentes", description: null, is_enabled: true, sort_order: 5 },
   { key: "combos", label: "Sets y kits", description: null, is_enabled: true, sort_order: 6 },
-  { key: "antes_despues", label: "Antes y después", description: null, is_enabled: true, sort_order: 7 },
-  { key: "eventos", label: "Eventos y bodas", description: null, is_enabled: true, sort_order: 8 },
-  { key: "frase", label: "Franja con la frase", description: null, is_enabled: true, sort_order: 9 },
-  { key: "mapa_delivery", label: "Zona de entrega", description: null, is_enabled: true, sort_order: 10 },
-  { key: "faq", label: "Preguntas frecuentes", description: null, is_enabled: true, sort_order: 11 },
-  { key: "newsletter", label: "Newsletter", description: null, is_enabled: true, sort_order: 12 },
+  { key: "servicios", label: "Servicios", description: null, is_enabled: true, sort_order: 7 },
+  { key: "antes_despues", label: "Antes y después", description: null, is_enabled: true, sort_order: 8 },
+  { key: "eventos", label: "Eventos y bodas", description: null, is_enabled: true, sort_order: 9 },
+  { key: "frase", label: "Franja con la frase", description: null, is_enabled: true, sort_order: 10 },
+  { key: "mapa_delivery", label: "Zona de entrega", description: null, is_enabled: true, sort_order: 11 },
+  { key: "faq", label: "Preguntas frecuentes", description: null, is_enabled: true, sort_order: 12 },
+  { key: "newsletter", label: "Newsletter", description: null, is_enabled: true, sort_order: 13 },
 ];
 
 export const BENEFICIOS_DEMO = [
@@ -449,4 +451,53 @@ export const ZONAS_DEMO: ZonaEnvio[] = [
   { id: "z-1", name: "Miramar", cost: null, sort_order: 1, is_active: true },
   { id: "z-2", name: "Mar del Plata", cost: null, sort_order: 2, is_active: true },
   { id: "z-3", name: "Otra localidad", cost: null, sort_order: 3, is_active: true },
+];
+
+export const SERVICIOS_DEMO: Servicio[] = [
+  {
+    id: "sv-1",
+    slug: "restauracion",
+    name: "Restauración y reciclado",
+    summary: "Muebles y cuadros que recuperan su historia. Mandanos fotos y te pasamos presupuesto.",
+    description:
+      "Restauramos, reciclamos y pintamos muebles, cuadros y objetos: lijado, pintura a la tiza, efectos decorativos y herrajes nuevos.\n\nContanos qué tenés, mandanos fotos y las medidas, y te pasamos un presupuesto.",
+    image_url: null,
+    asks_photos: true,
+    asks_measures: true,
+    asks_date: false,
+    showcase: "antes_despues",
+    sort_order: 1,
+    is_active: true,
+  },
+  {
+    id: "sv-2",
+    slug: "ambientacion",
+    name: "Ambientación de eventos",
+    summary: "Bodas, cumpleaños y celebraciones: mesas, cartelería, centros y souvenirs.",
+    description:
+      "Ambientamos tu evento con mesas vintage, cartelería de bienvenida, centros de mesa y souvenirs personalizados.\n\nContanos la fecha, el lugar y la idea que tenés, y armamos una propuesta.",
+    image_url: null,
+    asks_photos: true,
+    asks_measures: false,
+    asks_date: true,
+    showcase: "eventos",
+    sort_order: 2,
+    is_active: true,
+  },
+  {
+    id: "sv-3",
+    slug: "asesoria",
+    name: "Asesoría de estilo",
+    summary:
+      "Te ayudamos a definir el estilo de tu casa: colores, iluminación y deco para cada ambiente.",
+    description:
+      "Te acompañamos a definir el estilo de tu casa o de un ambiente: paleta de colores, iluminación, muebles y detalles de deco.\n\nMandanos fotos del lugar y contanos qué te gustaría lograr.",
+    image_url: null,
+    asks_photos: true,
+    asks_measures: false,
+    asks_date: false,
+    showcase: "none",
+    sort_order: 3,
+    is_active: true,
+  },
 ];

@@ -38,6 +38,10 @@ export const AJUSTES_POR_DEFECTO = {
   ofertas_titulo_cursiva: "semana",
   combos_titulo: "Sets para",
   combos_titulo_cursiva: "regalar",
+  servicios_titulo: "Nuestros",
+  servicios_titulo_cursiva: "servicios",
+  servicios_texto:
+    "Restauramos, ambientamos y te asesoramos. Contanos qué necesitás y te pasamos un presupuesto.",
   antes_despues_titulo: "Antes y",
   antes_despues_titulo_cursiva: "después",
   antes_despues_texto:
@@ -125,9 +129,24 @@ export function aNumero(valor: string | undefined, porDefecto = 0) {
   return Number.isFinite(n) ? n : porDefecto;
 }
 
-/** Normaliza un número de WhatsApp a solo dígitos (formato wa.me). */
+/**
+ * Lleva un número al formato de wa.me. Los argentinos llegan de mil maneras
+ * (0223 15 555-1234, 2291 50 0000, +54 9 11...) y wa.me los necesita como
+ * 549 + característica sin 0 + número sin 15. Lo que no encaja queda en dígitos.
+ */
 export function normalizarWhatsapp(numero: string) {
-  return numero.replace(/\D/g, "");
+  const crudo = numero.replace(/\D/g, "").replace(/^00/, "");
+  let digitos = crudo;
+  if (digitos.startsWith("54")) digitos = digitos.slice(2);
+  if (digitos.startsWith("9") && (digitos.length === 11 || digitos.length === 13)) {
+    digitos = digitos.slice(1);
+  }
+  digitos = digitos.replace(/^0/, "");
+  if (digitos.length === 12) {
+    const corte = [2, 3, 4].find((i) => digitos.slice(i, i + 2) === "15");
+    if (corte !== undefined) digitos = digitos.slice(0, corte) + digitos.slice(corte + 2);
+  }
+  return digitos.length === 10 ? `549${digitos}` : crudo;
 }
 
 export function linkWhatsapp(numero: string, mensaje: string) {

@@ -135,7 +135,10 @@ export function Pie({
           <p>
             © {new Date().getFullYear()} {nombre}. Hecho a mano en Miramar.
           </p>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2">
+            <Link href="/servicios" className="transition-colors hover:text-nogal">
+              Servicios
+            </Link>
             <Link href="/trabajos" className="transition-colors hover:text-nogal">
               Trabajos
             </Link>

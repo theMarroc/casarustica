@@ -16,7 +16,7 @@ update o delete).
 | 1. Identidad | Paleta con acento intercambiable (celeste / tiffany en `.marca-taller`), tipografías y estilo elegibles desde Ajustes › Apariencia, logos desde Ajustes, textos por defecto, datos de ejemplo, primer deploy | Hecha |
 | 2. Antes y después, eventos y portada | Comparador deslizable, portfolio de eventos (página `/trabajos`), secciones nuevas de portada, sacar el carrusel | Hecha |
 | 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña opcional; efectivo al retirar; zonas de envío; estados nuevos del pedido | Hecha |
-| 4. Servicios con presupuesto | Restauración, ambientación y asesoría: formulario con fotos (URL firmada), solicitudes con estados en el panel | Pendiente |
+| 4. Servicios con presupuesto | Restauración, ambientación y asesoría: formulario con fotos (URL firmada), solicitudes con estados en el panel | Hecha |
 | 5. Taller Azul Tiffany | `/taller`, talleres y profesorado con fechas, cupo, duración y contenido; inscripción y seña por la web; lista de espera | Pendiente |
 | 6. Publicación | Variables en Vercel, Auth y webhook, prueba completa, cron para que Supabase no se pause, manual del panel | Pendiente |
 
@@ -31,6 +31,9 @@ update o delete).
 - Antes y después y eventos viven en la página Trabajos (`/trabajos`, cada evento en `/trabajos/<slug>`). El carrusel de fotos se sacó.
 - Las fotos que se suben desde el panel se achican en el navegador (menos los PNG, para no perder la transparencia de los logos).
 - Cambios de esquema en la base de producción: primero se publica el código que ya no usa lo que se borra, y recién después se corre el SQL.
+- Servicios: cada uno tiene su página (`/servicios/<slug>`) con formulario de presupuesto. Desde el panel se elige qué pide (fotos, medidas, fecha del evento) y qué trabajos muestra (antes y después o eventos). La dirección se arma al crearlo y no cambia al editarlo.
+- Presupuestos (`/admin/solicitudes`): estados Nueva, Presupuestada, Aceptada, Terminada y Descartada; monto y notas internas; las fotos quedan en el bucket privado `solicitudes` y se ven con enlaces firmados de una hora. El menú del panel y el Resumen cuentan los nuevos.
+- Los números de WhatsApp se normalizan a 549 + característica + número, sin 0 ni 15, escriba como escriba el cliente.
 
 ## Respuestas de Silvina (24/09/2026)
 
@@ -45,4 +48,3 @@ Criterios tomados a partir de eso: si un pedido lleva seña, la seña se paga on
 ## Decisiones abiertas
 
 - Tipografía y estilo de color: se eligen y se cambian desde Ajustes › Apariencia (Clásica, Cálida o Sobria; Casa Rústica o Azul Tiffany).
-- Aviso de solicitudes nuevas: botón de WhatsApp para el cliente y contador en el panel.

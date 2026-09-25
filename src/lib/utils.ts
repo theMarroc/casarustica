@@ -27,14 +27,14 @@ export function slugify(texto: string) {
     .slice(0, 60);
 }
 
-/** Código corto y legible para los pedidos: CR-7F3K2 */
-export function generarCodigoPedido() {
+/** Código corto y legible: CR-7F3K2 para pedidos, PR-7F3K2 para presupuestos. */
+export function generarCodigoPedido(prefijo = "CR") {
   const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let salida = "";
   for (let i = 0; i < 5; i += 1) {
     salida += alfabeto[Math.floor(Math.random() * alfabeto.length)];
   }
-  return `CR-${salida}`;
+  return `${prefijo}-${salida}`;
 }
 
 export function tokenAleatorio(largo = 24) {

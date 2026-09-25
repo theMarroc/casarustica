@@ -3,8 +3,8 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
+  MailQuestionMark,
   Package,
-  Percent,
   ShoppingBag,
   TrendingUp,
 } from "lucide-react";
@@ -31,7 +31,7 @@ export default async function ResumenAdmin() {
     porRevisar,
     totalProductos,
     sinStock,
-    ofertasActivas,
+    presupuestosNuevos,
     ajustes,
   ] = await Promise.all([
     supabase
@@ -50,9 +50,9 @@ export default async function ResumenAdmin() {
       .eq("track_stock", true)
       .lte("stock", 0),
     supabase
-      .from("offers")
+      .from("quote_requests")
       .select("id", { count: "exact", head: true })
-      .eq("is_active", true),
+      .eq("status", "nueva"),
     getAjustes(),
   ]);
 
@@ -62,6 +62,7 @@ export default async function ResumenAdmin() {
   >[];
 
   const pendientes = porRevisar.count ?? 0;
+  const consultas = presupuestosNuevos.count ?? 0;
 
   const faltaConfigurar = [
     !ajusteCrudo(ajustes, "whatsapp_numero") && {
@@ -89,17 +90,17 @@ export default async function ResumenAdmin() {
       destacar: pendientes > 0,
     },
     {
+      titulo: "Presupuestos nuevos",
+      valor: String(consultas),
+      href: "/admin/solicitudes?estado=nueva",
+      Icono: MailQuestionMark,
+      destacar: consultas > 0,
+    },
+    {
       titulo: "Productos publicados",
       valor: String(totalProductos.count ?? 0),
       href: "/admin/productos",
       Icono: Package,
-      destacar: false,
-    },
-    {
-      titulo: "Ofertas activas",
-      valor: String(ofertasActivas.count ?? 0),
-      href: "/admin/ofertas",
-      Icono: Percent,
       destacar: false,
     },
     {

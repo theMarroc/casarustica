@@ -10,6 +10,7 @@ import {
   OFERTAS_DEMO,
   PRODUCTOS_DEMO,
   SECCIONES_DEMO,
+  SERVICIOS_DEMO,
   ZONAS_DEMO,
 } from "./demo-data";
 import { createClient, supabaseConfigurado } from "./supabase/server";
@@ -23,6 +24,7 @@ import type {
   Offer,
   Product,
   Section,
+  Servicio,
   Settings,
   ZonaEnvio,
 } from "./types";
@@ -333,4 +335,34 @@ export const getZonasEnvio = cache(async (incluirInactivas = false): Promise<Zon
   const { data, error } = await consulta;
   if (error) throw new Error(`No se pudieron leer las zonas de envío: ${error.message}`);
   return (data ?? []).map((z) => ({ ...z, cost: z.cost === null ? null : Number(z.cost) }));
+});
+
+export const getServicios = cache(async (incluirInactivos = false): Promise<Servicio[]> => {
+  if (modoDemo()) return SERVICIOS_DEMO;
+
+  const supabase = await createClient();
+  let consulta = supabase.from("services").select("*").order("sort_order").order("name");
+  if (!incluirInactivos) consulta = consulta.eq("is_active", true);
+
+  const { data, error } = await consulta;
+  if (error) throw new Error(`No se pudieron leer los servicios: ${error.message}`);
+  return data ?? [];
+});
+
+export const getServicio = cache(async (slug: string): Promise<Servicio | null> => {
+  if (modoDemo()) return SERVICIOS_DEMO.find((s) => s.slug === slug) ?? null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("services").select("*").eq("slug", slug).maybeSingle();
+  if (error) throw new Error(`No se pudo leer el servicio: ${error.message}`);
+  return data;
+});
+
+export const getServicioPorId = cache(async (id: string): Promise<Servicio | null> => {
+  if (modoDemo()) return SERVICIOS_DEMO.find((s) => s.id === id) ?? null;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("services").select("*").eq("id", id).maybeSingle();
+  if (error) throw new Error(`No se pudo leer el servicio: ${error.message}`);
+  return data;
 });

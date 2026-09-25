@@ -249,6 +249,53 @@ export type Order = {
   items?: OrderItem[];
 };
 
+export type Vidriera = "none" | "antes_despues" | "eventos";
+
+export type Servicio = {
+  id: string;
+  slug: string;
+  name: string;
+  summary: string | null;
+  description: string | null;
+  image_url: string | null;
+  asks_photos: boolean;
+  asks_measures: boolean;
+  asks_date: boolean;
+  /** Qué trabajos se muestran en la página del servicio. */
+  showcase: Vidriera;
+  sort_order: number;
+  is_active: boolean;
+};
+
+export type EstadoSolicitud = "nueva" | "presupuestada" | "aceptada" | "terminada" | "descartada";
+
+export const ESTADOS_SOLICITUD: Record<EstadoSolicitud, { label: string; clase: string }> = {
+  nueva: { label: "Nueva", clase: "bg-acento-fuerte text-white" },
+  presupuestada: { label: "Presupuestada", clase: "bg-acento/40 text-nogal" },
+  aceptada: { label: "Aceptada", clase: "bg-salvia/20 text-salvia" },
+  terminada: { label: "Terminada", clase: "bg-salvia text-white" },
+  descartada: { label: "Descartada", clase: "bg-carbon/10 text-carbon/60" },
+};
+
+export type Solicitud = {
+  id: string;
+  code: string;
+  service_id: string | null;
+  service_name: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  location: string | null;
+  event_date: string | null;
+  measures: string | null;
+  message: string;
+  status: EstadoSolicitud;
+  quoted_amount: number | null;
+  internal_notes: string | null;
+  created_at: string;
+  images?: { id: string; path: string; sort_order: number }[];
+};
+
 export type ZonaEnvio = {
   id: string;
   name: string;

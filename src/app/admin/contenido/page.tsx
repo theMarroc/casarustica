@@ -126,6 +126,7 @@ export default async function ContenidoAdmin() {
                   ["Destacados", "destacados_titulo", "destacados_titulo_cursiva"],
                   ["Ofertas", "ofertas_titulo", "ofertas_titulo_cursiva"],
                   ["Sets y kits", "combos_titulo", "combos_titulo_cursiva"],
+                  ["Servicios", "servicios_titulo", "servicios_titulo_cursiva"],
                   ["Antes y después", "antes_despues_titulo", "antes_despues_titulo_cursiva"],
                   ["Eventos", "eventos_titulo", "eventos_titulo_cursiva"],
                   ["Página Trabajos", "trabajos_titulo", "trabajos_titulo_cursiva"],
@@ -156,6 +157,17 @@ export default async function ContenidoAdmin() {
                   name="ajuste_categorias_texto"
                   rows={2}
                   defaultValue={ajuste(ajustes, "categorias_texto")}
+                />
+              </CampoConEtiqueta>
+
+              <CampoConEtiqueta
+                etiqueta="Texto debajo de Servicios"
+                className="sm:col-span-2"
+              >
+                <AreaTexto
+                  name="ajuste_servicios_texto"
+                  rows={2}
+                  defaultValue={ajuste(ajustes, "servicios_texto")}
                 />
               </CampoConEtiqueta>
 

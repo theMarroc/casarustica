@@ -10,9 +10,9 @@ import { Logo } from "@/components/ui/marca";
 import { cn } from "@/lib/utils";
 
 const ENLACES = [
-  { href: "/", texto: "Inicio" },
   { href: "/tienda", texto: "Tienda" },
   { href: "/sets", texto: "Sets y kits" },
+  { href: "/servicios", texto: "Servicios" },
   { href: "/trabajos", texto: "Trabajos" },
   { href: "/nosotros", texto: "Nosotros" },
   { href: "/contacto", texto: "Contacto" },

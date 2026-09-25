@@ -6,8 +6,10 @@ import {
   CalendarHeart,
   ExternalLink,
   FileText,
+  Hammer,
   LayoutDashboard,
   LogOut,
+  MailQuestionMark,
   Menu,
   Package,
   Percent,
@@ -42,6 +44,13 @@ const SECCIONES = [
     ],
   },
   {
+    titulo: "Servicios",
+    enlaces: [
+      { href: "/admin/solicitudes", texto: "Presupuestos", Icono: MailQuestionMark },
+      { href: "/admin/servicios", texto: "Servicios", Icono: Hammer },
+    ],
+  },
+  {
     titulo: "Trabajos",
     enlaces: [
       { href: "/admin/antes-y-despues", texto: "Antes y después", Icono: SquareSplitHorizontal },
@@ -65,7 +74,13 @@ const SECCIONES = [
   },
 ];
 
-export function NavegacionAdmin({ nombre }: { nombre: string }) {
+export function NavegacionAdmin({
+  nombre,
+  presupuestosNuevos,
+}: {
+  nombre: string;
+  presupuestosNuevos: number;
+}) {
   const ruta = usePathname();
   const [abierto, setAbierto] = useState(false);
 
@@ -95,6 +110,14 @@ export function NavegacionAdmin({ nombre }: { nombre: string }) {
                   >
                     <Icono className="h-4 w-4 shrink-0" strokeWidth={1.5} />
                     {texto}
+                    {href === "/admin/solicitudes" && presupuestosNuevos > 0 ? (
+                      <span
+                        className="ml-auto rounded-full bg-acento-fuerte px-1.5 py-px text-[10px] font-bold text-white"
+                        title="Presupuestos nuevos sin mirar"
+                      >
+                        {presupuestosNuevos}
+                      </span>
+                    ) : null}
                   </Link>
                 </li>
               ))}
