@@ -75,6 +75,11 @@ export default async function ResumenAdmin() {
         texto: "Falta el alias o CBU para cobrar por transferencia.",
         href: "/admin/ajustes",
       },
+    esVerdadero(ajustes.retiro_activo ?? "true") &&
+      !ajusteCrudo(ajustes, "retiro_direccion") && {
+        texto: "Falta la dirección de retiro (es también la del taller).",
+        href: "/admin/ajustes",
+      },
     (totalProductos.count ?? 0) === 0 && {
       texto: "No hay productos cargados en la tienda.",
       href: "/admin/productos",
@@ -133,6 +138,13 @@ export default async function ResumenAdmin() {
             <AlertTriangle className="h-4 w-4" strokeWidth={1.6} />
             Para terminar de dejarlo listo
           </h2>
+          <p className="mt-1 text-xs text-carbon/65">
+            ¿Primera vez en el panel?{" "}
+            <Link href="/admin/ayuda" className="font-semibold text-acento-fuerte hover:underline">
+              Mirá la ayuda
+            </Link>
+            .
+          </p>
           <ul className="mt-3 flex flex-col gap-2">
             {faltaConfigurar.map((item) => (
               <li key={item.texto}>

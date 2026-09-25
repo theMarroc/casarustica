@@ -1,8 +1,12 @@
 # Casa Rústica: tienda online
 
 Tienda de deco hogar y arte hecho a mano de Silvina Scalzo (Miramar), con el
-taller de arte Azul Tiffany. Tiene panel de administración para gestionar el
-catálogo, las ofertas, los pedidos y el contenido del sitio.
+taller de arte Azul Tiffany. Vende productos (con stock, a pedido y
+personalizables), recibe pedidos de presupuesto de sus servicios e inscribe a
+sus talleres con cupo y seña. Tiene panel de administración para gestionar todo.
+
+Publicada en <https://casarustica.vercel.app>. El manual para la administradora
+está dentro del panel, en **Ayuda** (`/admin/ayuda`).
 
 Todo el stack es **gratis**: Next.js en Vercel + Supabase (base de datos, login
 y almacenamiento de imágenes). No hace falta comprar dominio: queda publicada en
@@ -14,16 +18,21 @@ una dirección `algo.vercel.app`.
 
 | Sección del panel | Para qué sirve |
 |---|---|
-| **Resumen** | Pedidos por revisar, productos sin stock y avisos de lo que falta configurar. |
-| **Pedidos** | Ver cada pedido, abrir el comprobante de transferencia y cambiar el estado. |
-| **Productos** | Cargar productos con fotos, precio, presentación, stock y descripción. |
+| **Resumen** | Pedidos por revisar, presupuestos nuevos, productos sin stock y lo que falta configurar. |
+| **Pedidos** | Pedidos de la tienda (CR-) e inscripciones al taller (TA-): comprobante, estado y WhatsApp del cliente. |
+| **Productos** | Fotos, precio, stock o a pedido con demora, seña opcional y campos de personalización. |
 | **Categorías** | Agrupar el catálogo (bandejas, latas, souvenirs…). |
 | **Sets y kits** | Armar sets de varios productos a un precio especial. |
+| **Presupuestos** | Las consultas de los servicios, con fotos, monto, notas y estado. |
+| **Servicios** | Restauración, ambientación y asesoría: qué pide cada formulario y qué trabajos muestra. |
+| **Talleres** | Talleres y profesorado, con fechas, cupo, precio y seña; inscriptas y lista de espera. |
+| **Antes y después / Eventos** | Los trabajos que se ven en `/trabajos`. |
 | **Ofertas** | Descuentos por porcentaje o monto fijo, sobre toda la tienda, una categoría o un producto, con fecha de inicio y fin. |
 | **Aumentar precios** | Subir (o bajar) todos los precios un porcentaje, con vista previa, redondeo y opción de deshacer. |
-| **Secciones** | Prender y apagar cada bloque de la portada (carrusel, FAQ, mapa de delivery, etc.) y reordenarlos. |
-| **Textos y fotos** | Editar todos los textos del sitio, la foto de portada, la barra de beneficios, las preguntas frecuentes y el carrusel. |
-| **Ajustes** | Tipografía y colores del sitio, logos, WhatsApp, redes, datos bancarios, costos de envío, zona de entrega y métodos de pago. |
+| **Secciones** | Prender, apagar y ordenar cada bloque de la portada. |
+| **Textos y fotos** | Todos los textos, la portada, Nosotros, la página del taller, los beneficios y las preguntas frecuentes. |
+| **Ajustes** | Apariencia, logos, WhatsApp y redes, cobros, envíos y zonas, retiro y horas de reserva del taller. |
+| **Ayuda** | El manual de uso del panel. |
 
 Los clientes pueden comprar **sin cuenta**. Si se registran, se les guardan las
 direcciones de entrega y el historial de pedidos.
@@ -51,7 +60,8 @@ El panel de administración pide la base de datos: eso se configura abajo.
 3. Cuando termine de crearse, andá a **SQL Editor › New query**, pegá **todo** el
    contenido del archivo [`supabase/schema.sql`](supabase/schema.sql) y apretá
    **Run**. Eso crea las tablas, los permisos, los espacios para las imágenes y
-   unos productos de ejemplo.
+   los datos iniciales (categorías, servicios, talleres y secciones). Los
+   productos no se precargan: los carga la administradora.
 4. Andá a **Project Settings › API** y copiá tres valores:
    - **Project URL**
    - **anon public** (la clave pública)
@@ -97,17 +107,25 @@ Listo: entrando a `/ingresar` con ese mail ya ve el panel en `/admin`.
    `.env.local`, pero con `NEXT_PUBLIC_SITE_URL` apuntando a la URL que te da
    Vercel (`https://casarustica.vercel.app`, por ejemplo).
 4. **Deploy**.
-5. Volvé a Supabase, **Authentication › URL Configuration**, y agregá esa misma
-   URL en *Site URL* y en *Redirect URLs* (`https://tu-sitio.vercel.app/**`),
-   para que funcionen los mails de confirmación.
+5. Volvé a Supabase, **Authentication › URL Configuration**: poné esa URL en
+   *Site URL* y agregá en *Redirect URLs* `https://tu-sitio.vercel.app/**` (y
+   `http://localhost:3000/**` para probar local).
+6. En **Authentication › Sign In / Providers**, destildá **Confirm email**. El
+   servidor de mails gratis de Supabase solo entrega a las direcciones del
+   equipo del proyecto, así que los clientes nunca recibirían la confirmación.
+   Si más adelante se configura un correo propio (*Emails › SMTP Settings*),
+   se puede volver a prender.
 
-Cada vez que hagas `git push`, Vercel vuelve a publicar solo.
+Si el repositorio está conectado a Vercel, cada `git push` publica solo. Este
+proyecto hoy se publica a mano con `npx vercel@latest deploy --prod`.
 
 ### Mantener el proyecto de Supabase despierto
 
 Los proyectos gratuitos de Supabase se pausan después de **7 días sin ninguna
-consulta**. Con visitas normales no pasa, pero si la tienda va a estar quieta un
-tiempo, entrá al panel una vez por semana o dejá configurado un ping automático.
+consulta**. Para que no pase, Vercel llama una vez por día a
+`/api/mantener-activo` (el `crons` de `vercel.json`), que solo cuenta las filas
+de los ajustes. Si se carga la variable `CRON_SECRET` en Vercel, la ruta exige
+ese secreto (Vercel lo manda solo).
 
 ---
 
@@ -132,7 +150,8 @@ Para aceptar tarjetas:
    *Cobrar con Mercado Pago*.
 
 Cuando alguien paga, Mercado Pago avisa a `/api/mercadopago/webhook` y el pedido
-pasa solo al estado **Pagado**.
+(o la inscripción) pasa solo a **Pagado**, o a **Seña pagada** si lleva seña. El
+aviso no se cree tal cual: se le pregunta a Mercado Pago el estado real del pago.
 
 > El Access Token es una credencial secreta, por eso se carga como variable de
 > entorno y no desde el panel.
@@ -145,16 +164,18 @@ pasa solo al estado **Pagado**.
 src/
   app/
     (tienda)/        Páginas públicas: portada, tienda, producto, carrito,
-                     checkout, pedido, cuenta del cliente
-    admin/           Panel de administración (protegido)
-    api/             Webhook de Mercado Pago
+                     checkout, pedido, servicios, taller, trabajos, cuenta
+    admin/           Panel de administración (protegido) y su Ayuda
+    api/             Webhook de Mercado Pago y el ping diario a Supabase
     auth/callback/   Confirmación de mail de Supabase
   actions/           Server Actions (todo lo que escribe en la base)
     admin/           Acciones del panel
   components/        Componentes de UI, agrupados por área
   lib/
     db.ts            Única capa de lectura del catálogo (+ modo demo)
-    pricing.ts       Cálculo de precios y ofertas
+    pricing.ts       Cálculo de precios, ofertas y seña
+    talleres.ts      Cupos, fechas y reservas del taller
+    mercadopago.ts   Preferencias de Checkout Pro
     settings.ts      Textos y parámetros editables, con sus valores por defecto
     supabase/        Clientes de Supabase (navegador, servidor, service_role)
 supabase/
@@ -181,6 +202,15 @@ docs/
   la que más le conviene al cliente.
 - **Cada aumento masivo queda registrado** en `price_changes` con un
   `batch_id`, y por eso se puede deshacer completo.
+- **Las fotos de clientes (comprobantes y presupuestos) se suben directo a
+  Storage** con una URL firmada que entrega el servidor, sin pasar por una
+  Server Action (Next corta en 1 MB y Vercel en 4,5 MB).
+- **Una inscripción al taller es un pedido más** (`kind = 'inscripcion'`), así
+  reutiliza Mercado Pago, la transferencia y el panel. El cupo lo cuenta la
+  función `lugares_tomados()` de la base: una inscripción sin pagar guarda el
+  lugar las horas de Ajustes (48 por defecto) y después lo libera.
+- **Cambios de esquema en producción:** si solo agregan, primero el SQL y después
+  el deploy; si borran algo que usa el código publicado, al revés.
 - **Si Supabase no está configurado**, el sitio público funciona igual con datos
   de ejemplo (`src/lib/demo-data.ts`) y muestra un aviso.
 

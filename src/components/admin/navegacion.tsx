@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarHeart,
+  CircleHelp,
   ExternalLink,
   FileText,
   Hammer,
@@ -140,6 +141,20 @@ export function NavegacionAdmin({
       <div className="mt-8 border-t border-piedra/30 pt-4">
         <p className="px-3 text-xs text-piedra-oscura">Ingresaste como</p>
         <p className="mb-3 truncate px-3 text-sm font-semibold text-nogal">{nombre}</p>
+
+        <Link
+          href="/admin/ayuda"
+          onClick={() => setAbierto(false)}
+          className={cn(
+            "flex items-center gap-2.5 rounded-marca px-3 py-2 text-sm transition-colors",
+            activo("/admin/ayuda")
+              ? "bg-carbon text-hueso"
+              : "text-carbon/75 hover:bg-arena/30 hover:text-carbon",
+          )}
+        >
+          <CircleHelp className="h-4 w-4" strokeWidth={1.5} />
+          Ayuda
+        </Link>
 
         <Link
           href="/"

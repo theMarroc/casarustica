@@ -18,7 +18,7 @@ update o delete).
 | 3. Catálogo y checkout | Productos con stock, a pedido y personalizables; seña opcional; efectivo al retirar; zonas de envío; estados nuevos del pedido | Hecha |
 | 4. Servicios con presupuesto | Restauración, ambientación y asesoría: formulario con fotos (URL firmada), solicitudes con estados en el panel | Hecha |
 | 5. Taller Azul Tiffany | `/taller`, talleres y profesorado con fechas, cupo, duración y contenido; inscripción y seña por la web; lista de espera | Hecha |
-| 6. Publicación | Variables en Vercel, Auth y webhook, prueba completa, cron para que Supabase no se pause, manual del panel | Pendiente |
+| 6. Publicación | Variables en Vercel, Auth y webhook, prueba completa, cron para que Supabase no se pause, manual del panel | Hecha |
 
 ## Decisiones tomadas
 
@@ -40,6 +40,11 @@ update o delete).
 - Lista de espera por fecha llena, o "avisame cuando haya fecha" si el taller no tiene fechas. Se ve en el panel con botón de WhatsApp; el menú cuenta las personas esperando.
 - La dirección del taller es la misma de retiro (Ajustes › Envíos y retiro).
 - Los formularios del panel se envían a mano: React 19 vaciaba el formulario después de un error y se perdía lo escrito.
+- Auth (25/09/2026): Site URL `https://casarustica.vercel.app`, Redirect URLs de producción y de `localhost:3000`, y **Confirm email apagado**: el servidor de mails gratis de Supabase solo entrega al equipo del proyecto. Si más adelante se configura un correo propio (SMTP), se puede volver a prender.
+- Mercado Pago queda para más adelante: por ahora se cobra por transferencia con comprobante y en efectivo al retirar.
+- Vercel llama todos los días a `/api/mantener-activo` (cron en `vercel.json`) para que Supabase no pause el proyecto.
+- El manual de uso está dentro del panel, en Ayuda (`/admin/ayuda`).
+- Sitemap, robots, imagen para compartir en redes, y páginas 404 y de error en castellano.
 
 ## Respuestas de Silvina (24/09/2026)
 
@@ -50,6 +55,11 @@ update o delete).
 5. Hace envíos y carga ella las condiciones (zonas con costo y un texto libre).
 
 Criterios tomados a partir de eso: si un pedido lleva seña, la seña se paga online y el resto al retirar o al recibir; el efectivo es solo para retiro; una inscripción sin pagar guarda el lugar 48 h (configurable); las cuotas mensuales del profesorado quedan fuera de la web.
+
+## Pendientes para el lanzamiento
+
+- Silvina carga desde el panel su WhatsApp, el alias o CBU y la dirección de retiro (el Resumen avisa lo que falta), además de productos, fotos y fechas de los talleres.
+- Mercado Pago, cuando quiera: cargar `MP_ACCESS_TOKEN` en Vercel, redesplegar y tildarlo en Ajustes › Cómo cobrás.
 
 ## Decisiones abiertas
 

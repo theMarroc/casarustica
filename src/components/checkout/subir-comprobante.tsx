@@ -103,7 +103,7 @@ export function SubirComprobante({
           <p className="font-semibold text-salvia">Comprobante recibido</p>
           <p className="mt-1 text-sm leading-relaxed text-carbon/75">
             Ya lo estamos revisando. En cuanto lo confirmemos te escribimos por WhatsApp
-            para coordinar la entrega.
+            {inscripcion ? " para confirmarte el lugar." : " para coordinar la entrega."}
           </p>
           {optimizacion ? <p className="mt-2 text-xs text-piedra-oscura">{optimizacion}</p> : null}
         </div>
