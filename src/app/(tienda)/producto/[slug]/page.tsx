@@ -226,7 +226,7 @@ export default async function PaginaProducto({
               <h2 className="font-display text-xl text-nogal">Más sobre este producto</h2>
               <div className="mt-3 flex flex-col gap-3 text-sm leading-relaxed text-carbon/75">
                 {producto.long_description
-                  .split(/\n{2,}/)
+                  .split(/(?:\r?\n){2,}/)
                   .map((parrafo, indice) => (
                     <p key={indice}>{parrafo}</p>
                   ))}

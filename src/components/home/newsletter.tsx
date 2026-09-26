@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 
 import { suscribirNewsletter, type EstadoFormulario } from "@/actions/publico";
 import { IconoFacebook, IconoInstagram, Isotipo } from "@/components/ui/marca";
+import { enviarSinVaciar } from "@/lib/formularios";
 import { ajuste, ajusteCrudo, ajusteQuitable } from "@/lib/settings";
 import type { Settings } from "@/lib/types";
 
@@ -12,6 +13,12 @@ export function Newsletter({ ajustes }: { ajustes: Settings }) {
     suscribirNewsletter,
     null,
   );
+  const formulario = useRef<HTMLFormElement>(null);
+
+  // Si se suscribió, el campo queda vacío; si hubo un error, queda lo escrito.
+  useEffect(() => {
+    if (estado?.ok) formulario.current?.reset();
+  }, [estado]);
 
   const instagram = ajusteQuitable(ajustes, "instagram_url");
   const facebook = ajusteCrudo(ajustes, "facebook_url");
@@ -31,7 +38,7 @@ export function Newsletter({ ajustes }: { ajustes: Settings }) {
             </p>
           </div>
 
-          <form action={accion} className="flex flex-col gap-2">
+          <form ref={formulario} onSubmit={enviarSinVaciar(accion)} className="flex flex-col gap-2">
             <div className="flex">
               <label htmlFor="email-newsletter" className="sr-only">
                 Tu correo

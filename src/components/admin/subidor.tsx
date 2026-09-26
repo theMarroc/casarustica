@@ -146,10 +146,18 @@ export function GestorImagenes({
   nombre = "imagenes",
   iniciales = [],
   carpeta = "productos",
+  epigrafe,
+  principal = true,
+  ayuda = "La primera es la que se ve en la página. Las fotos grandes se achican solas.",
 }: {
   nombre?: string;
   iniciales?: ImagenEditor[];
   carpeta?: string;
+  /** Si viene, cada foto lleva un epígrafe (se guarda en `alt`) y este es su ejemplo. */
+  epigrafe?: string;
+  /** Marcar la primera foto como la principal. */
+  principal?: boolean;
+  ayuda?: string;
 }) {
   const [imagenes, setImagenes] = useState<ImagenEditor[]>(iniciales);
   const [subiendo, setSubiendo] = useState(false);
@@ -182,7 +190,7 @@ export function GestorImagenes({
                   sizes="200px"
                   className="object-cover"
                 />
-                {indice === 0 ? (
+                {principal && indice === 0 ? (
                   <span className="absolute left-2 top-2 rounded-full bg-acento px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-carbon">
                     Principal
                   </span>
@@ -222,6 +230,23 @@ export function GestorImagenes({
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
+
+              {epigrafe ? (
+                <input
+                  value={imagen.alt}
+                  onChange={(evento) =>
+                    setImagenes((actuales) =>
+                      actuales.map((actual, i) =>
+                        i === indice ? { ...actual, alt: evento.target.value } : actual,
+                      ),
+                    )
+                  }
+                  maxLength={140}
+                  placeholder={epigrafe}
+                  aria-label="Epígrafe de la foto"
+                  className="w-full border-t border-piedra/20 px-2.5 py-2 text-xs text-carbon outline-none placeholder:text-piedra focus:bg-lino/50"
+                />
+              ) : null}
             </li>
           ))}
         </ul>
@@ -241,9 +266,7 @@ export function GestorImagenes({
         <span className="text-sm font-semibold text-nogal">
           {subiendo ? "Subiendo..." : "Agregar fotos"}
         </span>
-        <span className="text-xs text-piedra-oscura">
-          La primera es la que se ve en la página. Las fotos grandes se achican solas.
-        </span>
+        <span className="text-xs text-piedra-oscura">{ayuda}</span>
         <input
           type="file"
           multiple

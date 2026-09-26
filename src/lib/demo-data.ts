@@ -529,6 +529,7 @@ export const TALLERES_DEMO: Taller[] = [
     image_url: null,
     sort_order: 1,
     is_active: true,
+    works: [],
     sessions: [
       {
         id: "tf-1",
@@ -572,6 +573,7 @@ export const TALLERES_DEMO: Taller[] = [
     image_url: null,
     sort_order: 2,
     is_active: true,
+    works: [],
     sessions: [
       {
         id: "tf-3",

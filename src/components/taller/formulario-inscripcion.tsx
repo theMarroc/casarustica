@@ -10,6 +10,7 @@ import { OpcionTarjeta } from "@/components/checkout/opcion-tarjeta";
 import { FormularioEspera } from "@/components/taller/formulario-espera";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta, Selector } from "@/components/ui/campos";
+import { enviarSinVaciar } from "@/lib/formularios";
 import { MAXIMO_PERSONAS } from "@/lib/talleres";
 import { cn, formatARS } from "@/lib/utils";
 
@@ -145,7 +146,7 @@ export function FormularioInscripcion({
           Por ahora la inscripción se hace por WhatsApp. Escribinos y te guardamos el lugar.
         </p>
       ) : (
-        <form action={accion} className="flex flex-col gap-8">
+        <form onSubmit={enviarSinVaciar(accion)} className="flex flex-col gap-8">
           <input type="hidden" name="fecha" value={fecha.id} />
           <input type="hidden" name="pago" value={pagoElegido} />
           <input

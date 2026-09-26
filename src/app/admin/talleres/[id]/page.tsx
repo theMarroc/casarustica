@@ -8,7 +8,7 @@ import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
 import { ListaEspera } from "@/components/admin/lista-espera";
 import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
-import { SubidorImagen } from "@/components/admin/subidor";
+import { GestorImagenes, SubidorImagen } from "@/components/admin/subidor";
 import { estilosBoton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta, Insignia, Selector } from "@/components/ui/campos";
 import { getTallerPorId } from "@/lib/db";
@@ -254,6 +254,20 @@ export default async function EditorTaller({
               <Campo name="materials_note" defaultValue={taller?.materials_note ?? ""} />
             </CampoConEtiqueta>
           </div>
+        </PanelAdmin>
+
+        <PanelAdmin
+          titulo="Galería de alumnas"
+          texto="Fotos de lo que hicieron en este taller. Se ven en la página del taller y en /taller. Antes de poner el nombre de alguien, pedile permiso."
+        >
+          <GestorImagenes
+            nombre="galeria"
+            carpeta="alumnas"
+            iniciales={(taller?.works ?? []).map((w) => ({ url: w.url, alt: w.caption ?? "" }))}
+            epigrafe="Bandeja de Marta, zincado"
+            principal={false}
+            ayuda="Podés subir varias juntas y ponerle a cada una un epígrafe. Se guardan con Guardar cambios."
+          />
         </PanelAdmin>
       </FormularioAdmin>
 

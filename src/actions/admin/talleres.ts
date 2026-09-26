@@ -53,6 +53,15 @@ export async function guardarTaller(
   });
   if (!analisis.success) return { ok: false, mensaje: analisis.error.issues[0].message };
 
+  let galeria: { url: string; alt: string }[] = [];
+  try {
+    galeria = z
+      .array(z.object({ url: z.string().url(), alt: z.string().trim().max(140).default("") }))
+      .parse(JSON.parse(String(datos.get("galeria") ?? "[]")));
+  } catch {
+    return { ok: false, mensaje: "No se pudo leer la galería de alumnas. Recargá la página." };
+  }
+
   const { id, ...campos } = analisis.data;
   const fila = {
     ...campos,
@@ -75,6 +84,28 @@ export async function guardarTaller(
 
   if (error || !guardado) {
     return { ok: false, mensaje: `No se pudo guardar: ${error?.message ?? "error"}` };
+  }
+
+  // La galería se reemplaza entera, como las fotos de los eventos.
+  const { error: errorBorrado } = await supabase
+    .from("workshop_works")
+    .delete()
+    .eq("workshop_id", guardado.id);
+  if (!errorBorrado && galeria.length > 0) {
+    const { data: insertadas } = await supabase
+      .from("workshop_works")
+      .insert(
+        galeria.map((foto, indice) => ({
+          workshop_id: guardado.id,
+          url: foto.url,
+          caption: foto.alt || null,
+          sort_order: indice,
+        })),
+      )
+      .select("id");
+    if ((insertadas?.length ?? 0) !== galeria.length) {
+      return { ok: false, mensaje: "El taller se guardó, pero no todas las fotos de la galería. Probá de nuevo." };
+    }
   }
 
   refrescar();

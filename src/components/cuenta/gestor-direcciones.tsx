@@ -11,6 +11,7 @@ import {
 } from "@/actions/direcciones";
 import { Boton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta, Insignia } from "@/components/ui/campos";
+import { enviarSinVaciar } from "@/lib/formularios";
 import type { Address } from "@/lib/types";
 
 export function GestorDirecciones({ direcciones }: { direcciones: Address[] }) {
@@ -97,7 +98,7 @@ export function GestorDirecciones({ direcciones }: { direcciones: Address[] }) {
 
       {editando ? (
         <form
-          action={accion}
+          onSubmit={enviarSinVaciar(accion)}
           className="rounded-marca border border-piedra/30 bg-white p-5 shadow-suave"
         >
           {editando !== "nueva" ? (

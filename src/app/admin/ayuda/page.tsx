@@ -81,6 +81,7 @@ const TEMAS: { titulo: string; puntos: string[] }[] = [
       "Si alguien se inscribe y no paga, le guardamos el lugar 48 horas (lo cambiás en Ajustes › Inscripciones al taller). Después el lugar se libera y en la fecha aparece Reserva vencida: podés cancelarla.",
       "Lista de espera: si la fecha se llena, la gente se anota. En cada fecha ves quiénes esperan, con un botón para avisarles por WhatsApp; marcalas como Avisada así llevás la cuenta. Si un taller no tiene fechas, pueden pedir que les avises cuando abras.",
       "Una fecha con inscripciones no se puede borrar: cancelá las inscripciones o cerrá la fecha.",
+      "Galería de alumnas: en cada taller podés subir fotos de lo que hicieron, con un epígrafe (por ejemplo, Bandeja de Marta, zincado). Se ven en la página del taller. Antes de publicar el nombre o la cara de alguien, pedile permiso.",
     ],
   },
   {

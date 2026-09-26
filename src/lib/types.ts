@@ -349,6 +349,18 @@ export type Taller = {
   sort_order: number;
   is_active: boolean;
   sessions: FechaTaller[];
+  /** Galería de alumnas. */
+  works: TrabajoAlumna[];
+};
+
+/** Una foto de la galería de alumnas, con su epígrafe. */
+export type TrabajoAlumna = {
+  id: string;
+  workshop_id: string;
+  url: string;
+  caption: string | null;
+  sort_order: number;
+  created_at: string;
 };
 
 export type EstadoEspera = "esperando" | "avisada" | "descartada";

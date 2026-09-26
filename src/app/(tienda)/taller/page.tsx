@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 
 import { EncabezadoSeccion } from "@/components/home/encabezado-seccion";
+import { GaleriaAlumnas } from "@/components/taller/galeria-alumnas";
 import { TarjetaFecha, TarjetaTaller } from "@/components/taller/tarjetas";
 import { estilosBoton } from "@/components/ui/boton";
 import { IconoWhatsapp, LogoTaller, Ornamento, PlaceholderImagen } from "@/components/ui/marca";
@@ -23,6 +24,10 @@ export default async function PaginaTaller() {
   const fechas = proximasFechas(talleres, 12);
   const clases = talleres.filter((t) => t.kind === "taller");
   const profesorado = talleres.filter((t) => t.kind === "profesorado");
+  const trabajos = talleres
+    .flatMap((t) => t.works.map((w) => ({ ...w, taller: t.name })))
+    .sort((a, b) => b.created_at.localeCompare(a.created_at))
+    .slice(0, 12);
   const imagen = ajusteCrudo(ajustes, "taller_imagen");
   const consulta = linkWhatsapp(
     ajuste(ajustes, "whatsapp_numero"),
@@ -92,6 +97,21 @@ export default async function PaginaTaller() {
           )}
         </div>
       </section>
+
+      {trabajos.length > 0 ? (
+        <section className="bg-lino py-16 lg:py-20">
+          <div className="contenedor">
+            <EncabezadoSeccion
+              titulo="Lo que hacen nuestras"
+              tituloCursiva="alumnas"
+              texto="Piezas terminadas en el taller, por quienes vinieron a aprender."
+            />
+            <div className="mt-10">
+              <GaleriaAlumnas fotos={trabajos} />
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {clases.length > 0 ? (
         <section className="bg-hueso py-16 lg:py-20">

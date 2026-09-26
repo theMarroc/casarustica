@@ -395,6 +395,18 @@ create table if not exists public.workshop_waitlist (
 
 create index if not exists workshop_waitlist_workshop_idx on public.workshop_waitlist (workshop_id, status);
 
+-- Galería de alumnas: fotos de lo que hicieron en cada taller.
+create table if not exists public.workshop_works (
+  id uuid primary key default gen_random_uuid(),
+  workshop_id uuid not null references public.workshops on delete cascade,
+  url text not null,
+  caption text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists workshop_works_workshop_idx on public.workshop_works (workshop_id);
+
 -- El carrusel de fotos se reemplazó por Antes y después y Eventos.
 drop table if exists public.gallery_images;
 
@@ -636,6 +648,7 @@ alter table public.quote_request_images enable row level security;
 alter table public.workshops enable row level security;
 alter table public.workshop_sessions enable row level security;
 alter table public.workshop_waitlist enable row level security;
+alter table public.workshop_works enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
@@ -811,6 +824,19 @@ create policy "fechas de taller administrables" on public.workshop_sessions
 
 drop policy if exists "lista de espera solo admin" on public.workshop_waitlist;
 create policy "lista de espera solo admin" on public.workshop_waitlist
+  for all using (public.is_admin()) with check (public.is_admin());
+
+drop policy if exists "trabajos de alumnas visibles" on public.workshop_works;
+create policy "trabajos de alumnas visibles" on public.workshop_works
+  for select using (
+    exists (
+      select 1 from public.workshops w
+      where w.id = workshop_works.workshop_id and (w.is_active or public.is_admin())
+    )
+  );
+
+drop policy if exists "trabajos de alumnas administrables" on public.workshop_works;
+create policy "trabajos de alumnas administrables" on public.workshop_works
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- --- Newsletter ------------------------------------------------------------

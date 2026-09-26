@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Clock, Palette } from "lucide-react";
 
 import { FormularioEspera } from "@/components/taller/formulario-espera";
+import { GaleriaAlumnas } from "@/components/taller/galeria-alumnas";
 import { FormularioInscripcion } from "@/components/taller/formulario-inscripcion";
 import { PlaceholderImagen } from "@/components/ui/marca";
 import { getUsuario } from "@/lib/auth";
@@ -119,7 +120,7 @@ export default async function PaginaDeTaller({
           <span className="linea-decorativa mt-5" />
           {taller.description ? (
             <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-carbon/75">
-              {taller.description.split(/\n{2,}/).map((parrafo, indice) => (
+              {taller.description.split(/(?:\r?\n){2,}/).map((parrafo, indice) => (
                 <p key={indice}>{parrafo}</p>
               ))}
             </div>
@@ -150,6 +151,20 @@ export default async function PaginaDeTaller({
           </a>
         </div>
       </section>
+
+      {taller.works.length > 0 ? (
+        <section className="py-14 lg:py-20">
+          <div className="contenedor">
+            <h2 className="titulo-seccion text-nogal">
+              Lo que hicieron nuestras <span className="cursiva-marca">alumnas</span>
+            </h2>
+            <span className="linea-decorativa mt-5" />
+            <div className="mt-10">
+              <GaleriaAlumnas fotos={taller.works} />
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section id="inscripcion" className="scroll-mt-24 bg-lino py-14 lg:py-20">
         <div className="contenedor max-w-3xl">

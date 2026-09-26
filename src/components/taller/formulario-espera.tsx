@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { anotarEnEspera } from "@/actions/inscripciones";
 import { Boton } from "@/components/ui/boton";
 import { Campo, CampoConEtiqueta, Selector } from "@/components/ui/campos";
+import { enviarSinVaciar } from "@/lib/formularios";
 import { MAXIMO_PERSONAS } from "@/lib/talleres";
 
 type Usuario = { nombre: string; email: string; telefono: string } | null;
@@ -36,7 +37,7 @@ export function FormularioEspera({
   }
 
   return (
-    <form action={accion} className="flex flex-col gap-4">
+    <form onSubmit={enviarSinVaciar(accion)} className="flex flex-col gap-4">
       <input type="hidden" name="taller" value={tallerId} />
       <input type="hidden" name="fecha" value={fechaId} />
       <input

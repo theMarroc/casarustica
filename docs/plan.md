@@ -39,7 +39,12 @@ update o delete).
 - El cupo lo cuenta la función `lugares_tomados()` de la base: suma las inscripciones no canceladas, y una sin pagar deja de contar pasadas las horas de Ajustes › Inscripciones al taller (48 por defecto). Si dos personas se anotan a la vez por el último lugar, la segunda no entra.
 - Lista de espera por fecha llena, o "avisame cuando haya fecha" si el taller no tiene fechas. Se ve en el panel con botón de WhatsApp; el menú cuenta las personas esperando.
 - La dirección del taller es la misma de retiro (Ajustes › Envíos y retiro).
-- Los formularios del panel se envían a mano: React 19 vaciaba el formulario después de un error y se perdía lo escrito.
+- Los formularios del panel y los públicos (checkout, inscripción, lista de espera, login, newsletter, direcciones) se envían con `enviarSinVaciar` (`src/lib/formularios.ts`): React 19 vaciaba el formulario después de un error y se perdía lo escrito.
+- Galería de alumnas (26/09/2026): en cada taller se suben fotos con epígrafe (tabla `workshop_works`); se ven en `/taller` (las 12 más nuevas) y en la página de cada taller, con visor.
+- "¿Es para regalar?" se probó y se sacó a pedido (26/09/2026): no está en el código ni en la base.
+- Los textos largos se separan en párrafos con `/(?:?
+){2,}/`: lo que se guarda desde un formulario llega con saltos de línea `
+`.
 - Dominio propio (25/09/2026): `www.estilorustica.com`, comprado en Namecheap. DNS en Namecheap: dos registros A de `@` (216.198.79.1 y 64.29.17.1) y un CNAME de `www` hacia Vercel. `estilorustica.com` y `casarustica.vercel.app` redirigen a `www`. `NEXT_PUBLIC_SITE_URL` en Vercel apunta al dominio nuevo.
 - Auth (25/09/2026): Site URL `https://www.estilorustica.com`, Redirect URLs del dominio, de `casarustica.vercel.app` y de `localhost:3000`, y **Confirm email apagado**: el servidor de mails gratis de Supabase solo entrega al equipo del proyecto. Si más adelante se configura un correo propio (SMTP), se puede volver a prender.
 - Mercado Pago queda para más adelante: por ahora se cobra por transferencia con comprobante y en efectivo al retirar.

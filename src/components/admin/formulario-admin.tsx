@@ -1,9 +1,10 @@
 "use client";
 
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { startTransition, useActionState, useEffect, useRef, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, type ReactNode } from "react";
 
 import { Boton, type TamanoBoton, type VarianteBoton } from "@/components/ui/boton";
+import { enviarSinVaciar } from "@/lib/formularios";
 import type { EstadoAdmin } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -11,9 +12,6 @@ import { cn } from "@/lib/utils";
  * Envoltorio para los formularios del panel.
  * Se encarga del estado (guardando / guardado / error) para que las páginas
  * puedan seguir siendo Server Components.
- *
- * Se envía a mano y no con `<form action>`: React 19 vacía el formulario
- * después de cada envío, y ante un error se perdía todo lo escrito.
  */
 export function FormularioAdmin({
   accion,
@@ -53,11 +51,7 @@ export function FormularioAdmin({
     <form
       ref={formulario}
       className={className}
-      onSubmit={(evento) => {
-        evento.preventDefault();
-        const datos = new FormData(evento.currentTarget);
-        startTransition(() => enviar(datos));
-      }}
+      onSubmit={enviarSinVaciar(enviar)}
     >
       {children}
 

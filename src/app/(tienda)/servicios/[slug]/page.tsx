@@ -84,7 +84,7 @@ export default async function PaginaServicio({
           <span className="linea-decorativa mt-5" />
           {servicio.description ? (
             <div className="mt-6 flex flex-col gap-4 text-[15px] leading-relaxed text-carbon/75">
-              {servicio.description.split(/\n{2,}/).map((parrafo, indice) => (
+              {servicio.description.split(/(?:\r?\n){2,}/).map((parrafo, indice) => (
                 <p key={indice}>{parrafo}</p>
               ))}
             </div>

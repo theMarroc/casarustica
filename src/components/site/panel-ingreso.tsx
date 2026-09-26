@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { ingresar, registrarse, type EstadoAuth } from "@/actions/auth";
 import { Boton } from "@/components/ui/boton";
 import { Campo, CampoConEtiqueta } from "@/components/ui/campos";
+import { enviarSinVaciar } from "@/lib/formularios";
 import { cn } from "@/lib/utils";
 
 export function PanelIngreso({ volver }: { volver: string }) {
@@ -47,7 +48,7 @@ export function PanelIngreso({ volver }: { volver: string }) {
       </div>
 
       {modo === "ingresar" ? (
-        <form action={accionIngreso} className="flex flex-col gap-4">
+        <form onSubmit={enviarSinVaciar(accionIngreso)} className="flex flex-col gap-4">
           <input type="hidden" name="volver" value={volver} />
 
           <CampoConEtiqueta etiqueta="Correo" requerido>
@@ -68,7 +69,7 @@ export function PanelIngreso({ volver }: { volver: string }) {
           </Boton>
         </form>
       ) : (
-        <form action={accionRegistro} className="flex flex-col gap-4">
+        <form onSubmit={enviarSinVaciar(accionRegistro)} className="flex flex-col gap-4">
           <input type="hidden" name="volver" value={volver} />
 
           <CampoConEtiqueta etiqueta="Nombre y apellido" requerido>

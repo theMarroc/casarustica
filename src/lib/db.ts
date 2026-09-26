@@ -379,7 +379,7 @@ const getLugaresTomados = cache(async (): Promise<Map<string, number>> => {
   );
 });
 
-const SELECT_TALLER = "*, sessions:workshop_sessions(*)";
+const SELECT_TALLER = "*, sessions:workshop_sessions(*), works:workshop_works(*)";
 
 function armarTaller(taller: Taller, tomados: Map<string, number>): Taller {
   return {
@@ -392,6 +392,7 @@ function armarTaller(taller: Taller, tomados: Map<string, number>): Taller {
         tomados: tomados.get(fecha.id) ?? 0,
       }))
       .sort((a, b) => a.starts_at.localeCompare(b.starts_at)),
+    works: [...(taller.works ?? [])].sort((a, b) => a.sort_order - b.sort_order),
   };
 }
 

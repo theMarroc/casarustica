@@ -11,6 +11,7 @@ import { DetalleLinea } from "@/components/cart/detalle-linea";
 import { OpcionTarjeta } from "@/components/checkout/opcion-tarjeta";
 import { Boton, estilosBoton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta, Selector } from "@/components/ui/campos";
+import { enviarSinVaciar } from "@/lib/formularios";
 import type { Address, PaymentMethod, ZonaEnvio } from "@/lib/types";
 import { formatARS } from "@/lib/utils";
 
@@ -105,7 +106,10 @@ export function FormularioCheckout({
   const direccionSeleccionada = direcciones.find((d) => d.id === direccionElegida);
 
   return (
-    <form action={accion} className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:gap-12">
+    <form
+      onSubmit={enviarSinVaciar(accion)}
+      className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:gap-12"
+    >
       <input
         type="hidden"
         name="items"
