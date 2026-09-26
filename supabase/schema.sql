@@ -407,6 +407,42 @@ create table if not exists public.workshop_works (
 
 create index if not exists workshop_works_workshop_idx on public.workshop_works (workshop_id);
 
+-- ---------------------------------------------------------------------------
+-- Instagram: la conexión y lo que se trae de las redes
+-- ---------------------------------------------------------------------------
+
+-- Un solo registro. El token es secreto: la tabla no tiene políticas, así
+-- que solo la lee el servidor con la clave de servicio.
+create table if not exists public.instagram_connection (
+  id boolean primary key default true check (id),
+  ig_user_id text not null,
+  username text,
+  access_token text not null,
+  expires_at timestamptz not null,
+  refreshed_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+
+-- Publicaciones traídas de Instagram: las importadas desde la conexión y
+-- los borradores que carga la migración del archivo descargado.
+create table if not exists public.social_imports (
+  id uuid primary key default gen_random_uuid(),
+  source text not null check (source in ('instagram', 'archivo')),
+  -- El id de la publicación, o en el archivo la ruta de su primera foto.
+  source_ref text not null unique,
+  caption text,
+  taken_at timestamptz,
+  images jsonb not null default '[]'::jsonb,
+  permalink text,
+  status text not null default 'pendiente' check (status in ('pendiente', 'importada', 'descartada')),
+  kind text check (kind in ('producto', 'evento', 'antes_despues', 'alumnas')),
+  record_id uuid,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists social_imports_estado_idx on public.social_imports (source, status);
+
 -- El carrusel de fotos se reemplazó por Antes y después y Eventos.
 drop table if exists public.gallery_images;
 
@@ -588,7 +624,7 @@ declare
   t text;
 begin
   for t in
-    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones', 'services', 'quote_requests', 'workshops', 'workshop_sessions'])
+    select unnest(array['categories', 'products', 'offers', 'combos', 'orders', 'settings', 'before_after', 'events', 'shipping_zones', 'services', 'quote_requests', 'workshops', 'workshop_sessions', 'social_imports'])
   loop
     execute format('drop trigger if exists set_updated_at_%1$s on public.%1$s', t);
     execute format(
@@ -649,6 +685,8 @@ alter table public.workshops enable row level security;
 alter table public.workshop_sessions enable row level security;
 alter table public.workshop_waitlist enable row level security;
 alter table public.workshop_works enable row level security;
+alter table public.instagram_connection enable row level security;
+alter table public.social_imports enable row level security;
 alter table public.newsletter_subscribers enable row level security;
 alter table public.addresses enable row level security;
 alter table public.orders enable row level security;
@@ -837,6 +875,12 @@ create policy "trabajos de alumnas visibles" on public.workshop_works
 
 drop policy if exists "trabajos de alumnas administrables" on public.workshop_works;
 create policy "trabajos de alumnas administrables" on public.workshop_works
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- --- Instagram --------------------------------------------------------------
+-- instagram_connection no tiene políticas a propósito: el token no sale del servidor.
+drop policy if exists "importaciones solo admin" on public.social_imports;
+create policy "importaciones solo admin" on public.social_imports
   for all using (public.is_admin()) with check (public.is_admin());
 
 -- --- Newsletter ------------------------------------------------------------

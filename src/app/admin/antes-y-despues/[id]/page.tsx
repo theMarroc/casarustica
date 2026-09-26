@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Trash2 } from "lucide-react";
 import { borrarAntesDespues, guardarAntesDespues } from "@/actions/admin/trabajos";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
-import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
+import { AvisoImportado, PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { SubidorImagen } from "@/components/admin/subidor";
 import { Comparador } from "@/components/trabajos/comparador";
 import { estilosBoton } from "@/components/ui/boton";
@@ -23,9 +23,9 @@ export default async function EditorAntesDespues({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ nuevo?: string; error?: string }>;
+  searchParams: Promise<{ nuevo?: string; error?: string; importado?: string }>;
 }) {
-  const [{ id }, { nuevo, error }] = await Promise.all([params, searchParams]);
+  const [{ id }, { nuevo, error, importado }] = await Promise.all([params, searchParams]);
   const esNuevo = id === "nuevo";
   const trabajo = esNuevo ? null : await getAntesDespuesPorId(id);
 
@@ -44,6 +44,7 @@ export default async function EditorAntesDespues({
           Trabajo creado. Así se ve el comparador en la página.
         </p>
       ) : null}
+      {importado === "1" ? <AvisoImportado texto="Lo trajimos de Instagram. Fijate que la primera foto sea el antes y tildá Visible cuando esté listo." /> : null}
 
       {error === "borrar" ? (
         <p className="mb-6 flex items-center gap-2 rounded-marca border border-alerta/40 bg-alerta/10 px-4 py-3 text-sm text-alerta-oscura">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { IconoInstagram } from "@/components/ui/marca";
 import { cn } from "@/lib/utils";
 
 export function TituloAdmin({
@@ -101,5 +102,15 @@ export function FilaDato({
       </span>
       <span className="text-sm text-carbon/85">{children}</span>
     </div>
+  );
+}
+
+/** Aviso para lo que se acaba de traer de Instagram. */
+export function AvisoImportado({ texto }: { texto: string }) {
+  return (
+    <p className="mb-6 flex items-center gap-2 rounded-marca border border-acento/50 bg-acento/15 px-4 py-3 text-sm leading-relaxed text-nogal">
+      <IconoInstagram className="h-4 w-4 shrink-0" />
+      {texto}
+    </p>
   );
 }

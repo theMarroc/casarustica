@@ -42,7 +42,9 @@ update o delete).
 - Los formularios del panel y los públicos (checkout, inscripción, lista de espera, login, newsletter, direcciones) se envían con `enviarSinVaciar` (`src/lib/formularios.ts`): React 19 vaciaba el formulario después de un error y se perdía lo escrito.
 - Galería de alumnas (26/09/2026): en cada taller se suben fotos con epígrafe (tabla `workshop_works`); se ven en `/taller` (las 12 más nuevas) y en la página de cada taller, con visor.
 - "¿Es para regalar?" se probó y se sacó a pedido (26/09/2026): no está en el código ni en la base.
-- Los textos largos se separan en párrafos con `/(?:?
+- Desde Instagram (26/09/2026): conexión oficial (Instagram API with Instagram Login, permiso `instagram_business_basic`; el token se guarda en `instagram_connection`, que solo lee el servidor, y el cron diario lo renueva) y migración del archivo descargado con `scripts/importar-instagram.mjs` (carga borradores en `social_imports`). Al importar, las fotos se copian a nuestro almacenamiento porque las de Instagram vencen, y lo creado queda oculto hasta revisarlo. Leer el link de una publicación sin la API no sirve: Meta bloquea a los servidores.
+- Los textos largos se separan en párrafos con `/(?:
+?
 ){2,}/`: lo que se guarda desde un formulario llega con saltos de línea `
 `.
 - Dominio propio (25/09/2026): `www.estilorustica.com`, comprado en Namecheap. DNS en Namecheap: dos registros A de `@` (216.198.79.1 y 64.29.17.1) y un CNAME de `www` hacia Vercel. `estilorustica.com` y `casarustica.vercel.app` redirigen a `www`. `NEXT_PUBLIC_SITE_URL` en Vercel apunta al dominio nuevo.

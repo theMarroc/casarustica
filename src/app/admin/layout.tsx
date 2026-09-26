@@ -14,7 +14,7 @@ export default async function LayoutAdmin({
 
   const perfil = await exigirAdminORedirigir();
   const supabase = await createClient();
-  const [presupuestos, espera] = await Promise.all([
+  const [presupuestos, espera, archivo] = await Promise.all([
     supabase
       .from("quote_requests")
       .select("id", { count: "exact", head: true })
@@ -23,6 +23,11 @@ export default async function LayoutAdmin({
       .from("workshop_waitlist")
       .select("id", { count: "exact", head: true })
       .eq("status", "esperando"),
+    supabase
+      .from("social_imports")
+      .select("id", { count: "exact", head: true })
+      .eq("source", "archivo")
+      .eq("status", "pendiente"),
   ]);
 
   return (
@@ -32,6 +37,7 @@ export default async function LayoutAdmin({
         avisos={{
           "/admin/solicitudes": presupuestos.count ?? 0,
           "/admin/talleres": espera.count ?? 0,
+          "/admin/instagram": archivo.count ?? 0,
         }}
       />
       <div className="min-w-0">

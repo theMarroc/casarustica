@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileText,
   Hammer,
+  ImageDown,
   LayoutDashboard,
   LogOut,
   MailQuestionMark,
@@ -75,6 +76,7 @@ const SECCIONES = [
     enlaces: [
       { href: "/admin/secciones", texto: "Secciones", Icono: ToggleLeft },
       { href: "/admin/contenido", texto: "Textos y fotos", Icono: FileText },
+      { href: "/admin/instagram", texto: "Desde Instagram", Icono: ImageDown },
       { href: "/admin/ajustes", texto: "Ajustes", Icono: Settings },
     ],
   },
@@ -83,6 +85,7 @@ const SECCIONES = [
 const TITULO_AVISO: Record<string, string> = {
   "/admin/solicitudes": "Presupuestos nuevos sin mirar",
   "/admin/talleres": "Personas en lista de espera",
+  "/admin/instagram": "Publicaciones del archivo sin revisar",
 };
 
 export function NavegacionAdmin({

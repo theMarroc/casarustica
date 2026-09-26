@@ -158,6 +158,52 @@ aviso no se cree tal cual: se le pregunta a Mercado Pago el estado real del pago
 
 ---
 
+## 6. Traer publicaciones de Instagram (opcional)
+
+En el panel, **Desde Instagram** permite usar las fotos y el texto de una
+publicación para crear un producto, un evento, un antes y después o fotos de la
+galería de alumnas. Todo se crea oculto (salvo la galería) para revisarlo antes.
+
+### Conectar la cuenta (para el día a día)
+
+1. La cuenta de Instagram tiene que ser **profesional** (empresa o creador). Se
+   cambia gratis desde la app: *Configuración › Tipo de cuenta y herramientas*.
+2. En <https://developers.facebook.com> creá una app de tipo **Business** y
+   agregale el producto **Instagram**. En *Instagram › API setup with Instagram
+   business login*:
+   - Copiá el **Instagram app ID** y el **Instagram app secret**.
+   - En *Business login settings*, agregá como *OAuth redirect URI*
+     `https://www.estilorustica.com/api/instagram/callback`.
+3. Mientras la app esté en modo desarrollo, en *App roles › Roles* agregá la
+   cuenta de Instagram como **Instagram Tester**, y aceptá la invitación desde
+   Instagram (en la web: *Configuración › Apps y sitios web › Invitaciones de
+   evaluador*).
+4. Cargá las variables en Vercel y volvé a desplegar:
+
+   ```bash
+   npx vercel@latest env add INSTAGRAM_APP_ID production
+   npx vercel@latest env add INSTAGRAM_APP_SECRET production
+   ```
+
+5. En el panel, **Desde Instagram › Conectar con Instagram**. El permiso dura 60
+   días y el cron diario lo renueva solo.
+
+### Migrar todo lo publicado (una sola vez)
+
+1. En Instagram: *Centro de cuentas › Tu información y permisos › Descargar tu
+   información*, eligiendo **formato JSON**, **todo el tiempo** y **calidad
+   alta**. Llega un mail con el ZIP.
+2. Desde la carpeta del proyecto:
+
+   ```bash
+   node scripts/importar-instagram.mjs ruta/al/archivo.zip --probar
+   node scripts/importar-instagram.mjs ruta/al/archivo.zip
+   ```
+
+   El primero solo muestra qué encontró. El segundo sube las fotos y carga cada
+   publicación como borrador en **Desde Instagram › Del archivo descargado**.
+   Si se corre de nuevo, saltea lo que ya cargó. Los videos no se cargan.
+
 ## Cómo está armado
 
 ```

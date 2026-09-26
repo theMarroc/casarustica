@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, ExternalLink, Trash2 } from "lucide-react";
 import { borrarEvento, guardarEvento } from "@/actions/admin/trabajos";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
-import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
+import { AvisoImportado, PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { GestorImagenes } from "@/components/admin/subidor";
 import { estilosBoton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta } from "@/components/ui/campos";
@@ -24,9 +24,9 @@ export default async function EditorEvento({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ nuevo?: string; error?: string }>;
+  searchParams: Promise<{ nuevo?: string; error?: string; importado?: string }>;
 }) {
-  const [{ id }, { nuevo, error }] = await Promise.all([params, searchParams]);
+  const [{ id }, { nuevo, error, importado }] = await Promise.all([params, searchParams]);
   const esNuevo = id === "nuevo";
   const evento = esNuevo ? null : await getEventoPorId(id);
 
@@ -56,6 +56,7 @@ export default async function EditorEvento({
           Evento creado.
         </p>
       ) : null}
+      {importado === "1" ? <AvisoImportado texto="Lo trajimos de Instagram. Revisá el título y los datos, y tildá Visible cuando esté listo." /> : null}
 
       {error === "borrar" ? (
         <p className="mb-6 flex items-center gap-2 rounded-marca border border-alerta/40 bg-alerta/10 px-4 py-3 text-sm text-alerta-oscura">

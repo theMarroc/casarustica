@@ -7,7 +7,7 @@ import { borrarTaller, guardarTaller } from "@/actions/admin/talleres";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
 import { ListaEspera } from "@/components/admin/lista-espera";
-import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
+import { AvisoImportado, PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { GestorImagenes, SubidorImagen } from "@/components/admin/subidor";
 import { estilosBoton } from "@/components/ui/boton";
 import { AreaTexto, Campo, CampoConEtiqueta, Insignia, Selector } from "@/components/ui/campos";
@@ -33,9 +33,9 @@ export default async function EditorTaller({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ nuevo?: string; error?: string }>;
+  searchParams: Promise<{ nuevo?: string; error?: string; importado?: string }>;
 }) {
-  const [{ id }, { nuevo, error }] = await Promise.all([params, searchParams]);
+  const [{ id }, { nuevo, error, importado }] = await Promise.all([params, searchParams]);
   const esNuevo = id === "nuevo";
   const taller = esNuevo ? null : await getTallerPorId(id);
   if (!esNuevo && !taller) notFound();
@@ -79,6 +79,7 @@ export default async function EditorTaller({
           Taller creado. Ahora agregale una fecha para abrir la inscripción.
         </p>
       ) : null}
+      {importado === "1" ? <AvisoImportado texto="Las fotos de Instagram ya están al final de la galería de alumnas. Ponele un epígrafe a cada una y tocá Guardar cambios." /> : null}
       {error && ERRORES[error] ? (
         <p className="mb-6 flex items-center gap-2 rounded-marca border border-alerta/40 bg-alerta/10 px-4 py-3 text-sm text-alerta-oscura">
           <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.6} />

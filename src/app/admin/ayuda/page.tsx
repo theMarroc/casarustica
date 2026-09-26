@@ -93,6 +93,16 @@ const TEMAS: { titulo: string; puntos: string[] }[] = [
     ],
   },
   {
+    titulo: "Desde Instagram",
+    puntos: [
+      "En Desde Instagram ves tus publicaciones. Tocá una, o pegá su link, para usar sus fotos y su texto.",
+      "Elegí qué fotos usar y qué crear: un producto, un evento, un antes y después o fotos para la galería de un taller. El texto viene sin los hashtags; revisalo antes de guardar.",
+      "Los productos, eventos y antes y después se crean ocultos: completá lo que falta (el precio, por ejemplo) y tildá Visible. Las fotos de la galería se ven enseguida.",
+      "Las publicaciones del archivo que descargaste de Instagram aparecen abajo. Importalas o descartalas; las descartadas se pueden recuperar.",
+      "Las que ya importaste quedan marcadas, así no las cargás dos veces.",
+    ],
+  },
+  {
     titulo: "Trabajos",
     puntos: [
       "Antes y después: dos fotos del mismo mueble u objeto. En la página se comparan deslizando.",

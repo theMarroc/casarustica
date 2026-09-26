@@ -7,7 +7,7 @@ import { borrarProducto, guardarProducto } from "@/actions/admin/productos";
 import { FormularioAdmin } from "@/components/admin/formulario-admin";
 import { EditorPersonalizacion } from "@/components/admin/editor-personalizacion";
 import { FormularioConfirmado } from "@/components/admin/formulario-confirmado";
-import { PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
+import { AvisoImportado, PanelAdmin, TituloAdmin } from "@/components/admin/piezas";
 import { GestorImagenes } from "@/components/admin/subidor";
 import { estilosBoton } from "@/components/ui/boton";
 import {
@@ -28,9 +28,9 @@ export default async function EditorProducto({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ nuevo?: string }>;
+  searchParams: Promise<{ nuevo?: string; importado?: string }>;
 }) {
-  const [{ id }, { nuevo }] = await Promise.all([params, searchParams]);
+  const [{ id }, { nuevo, importado }] = await Promise.all([params, searchParams]);
   const esNuevo = id === "nuevo";
 
   const [producto, categorias] = await Promise.all([
@@ -64,6 +64,7 @@ export default async function EditorProducto({
           Producto creado. Ya podés subirle las fotos.
         </p>
       ) : null}
+      {importado === "1" ? <AvisoImportado texto="Lo trajimos de Instagram. Revisá el nombre, poné el precio y la categoría, y tildá Visible cuando esté listo." /> : null}
 
       <FormularioAdmin
         accion={guardarProducto}
